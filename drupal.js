@@ -322,16 +322,29 @@ function uploadFile(base64data, filename, filesize, success, failure) {
 	}, success, failure);
 }
 
-exports = {
-	setRestPath : setRestPath,
-	createAccount : createAccount,
-	login : login,
-	getSessionUser : getSessionUser,
-	getResource : getResource,
-	makeAuthenticatedRequest : makeAuthenticatedRequest,
-	getView : getView,
-	logout : logout
+
+
+/**
+ * Do the custom serialization for sending drupal views contextual filter settings
+ * 
+ * @param {Object} obj
+ */
+function serializeDrupalViewsFilter(obj) {
+	var str = [];
+	for(var p in obj) {
+  		if (obj[p]  instanceof Array) {
+  			
+  			for (var i=0, l=obj[p].length; i<l; i++) {
+				str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p][i]));
+			}
+  		}
+  		else {
+			str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+		}
+	}
+	return str.join("&");
 };
+
 
 function encodeUrlString(args) {
 	var parts = [];
@@ -357,3 +370,16 @@ function saveCredentials(username, password) {
 	Ti.App.Properties.setString('password', password);
 }
 
+
+
+exports = {
+	setRestPath : setRestPath,
+	createAccount : createAccount,
+	login : login,
+	getSessionUser : getSessionUser,
+	getResource : getResource,
+	serializeDrupalViewsFilter: serializeDrupalViewsFilter,
+	makeAuthenticatedRequest : makeAuthenticatedRequest,
+	getView : getView,
+	logout : logout
+};
