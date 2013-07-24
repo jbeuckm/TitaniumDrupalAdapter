@@ -30,7 +30,7 @@ function systemConnect(success, failure) {
 	var url = REST_PATH + 'system/connect.json';
 	var xhr = Titanium.Network.createHTTPClient();
 	xhr.open("POST", url);
-	xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.onload = function() {
 		var statusCode = xhr.status;
 		if (statusCode == 200) {
@@ -49,18 +49,52 @@ function systemConnect(success, failure) {
 
 function createAccount(user, success, failure) {
 
-	systemConnect(
-		function(sc){
-Ti.API.info(sc);	
+	getCsrfToken(function(token) {
+
+		systemConnect(
+			function(responseData){
+	
+				Ti.App.Properties.setString("userUid", responseData.user.uid);
+				Ti.App.Properties.setString("userSessionId", responseData.sessid);
+				Ti.App.Properties.setString("userSessionName", responseData.session_name);
+Ti.API.trace('system/connect gives '+JSON.stringify(responseData));
+				registerNewUser(user, success, failure);
+
+			},
+			function(e){
+				Ti.API.error(e);
+				failure(e);
+			}
+		);
+
+	},
+	function(err){
+		failure(err);
+	});
+}
+
+function registerNewUser(user, success, failure) {
+Ti.API.info('will now register user '+JSON.stringify(user));	
+	makeAuthenticatedRequest({
+			httpCommand : 'POST',
+			servicePath : 'user/register',
+//			contentType: 'text/plain',
+//			skipCsrfToken: true,
+			params: user
+		}, 
+		//success
+		function(responseData){
+			Ti.API.info('registerNewUser SUCCESS');
+			success(responseData);
 		},
-		function(e){
-			Ti.API.error(e);	
-			failure(e);
+		//fail
+		function(err){
+			Ti.API.error('registerNewUser FAIL');
+			failure(err);
 		}
 	);
 
-return;
-
+/*
 	getCsrfToken(function(token) {
 
 		var xhr = Ti.Network.createHTTPClient();
@@ -75,7 +109,7 @@ return;
 			if (statusCode == 200) {
 				var response = xhr.responseText;
 				var data = JSON.parse(response);
-				Ti.API.trace('create account returned 200');
+				Ti.API.trace('user/register returned 200');
 				Ti.API.trace(data);
 
 				Ti.App.Properties.setInt("userUid", data.uid);
@@ -98,7 +132,9 @@ return;
 	}, function(e) {
 		failure(e);
 	});
+*/
 }
+
 
 function login(username, password, success, failure) {
 
@@ -166,7 +202,6 @@ function logout(success, failure) {
 		Ti.App.Properties.removeProperty("X-CSRF-Token")
 		success();
 	}, failure);
-	return;
 
 }
 
@@ -192,15 +227,15 @@ function loginFromSavedCredentials(success, failure) {
 
 function makeAuthenticatedRequest(config, success, failure) {
 
-	var xhr = Titanium.Network.createHTTPClient();
-
 	var url = REST_PATH + config.servicePath;
+
+	var xhr = Titanium.Network.createHTTPClient();
 	xhr.open(config.httpCommand, url);
 
 	xhr.onerror = function(e) {
-		Ti.API.error(JSON.stringify(this));
+		Ti.API.error(JSON.stringify(e));
 
-		failure(this);
+		failure(e);
 	};
 
 	xhr.onload = function() {
@@ -213,13 +248,19 @@ function makeAuthenticatedRequest(config, success, failure) {
 
 	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
 
-	xhr.setRequestHeader("Cookie", authString);
-	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 
+	xhr.setRequestHeader("Cookie", authString);
+	if (!config.skipCsrfToken) {
+		xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+	}
+	
 	xhr.setRequestHeader("Accepts", "application/json");
 
 	if (config.contentType) {
 		xhr.setRequestHeader("Content-Type", config.contentType);
+	}
+	else {
+		xhr.setRequestHeader("Content-Type", "application/json");
 	}
 
 	xhr.send(config.params);
@@ -236,8 +277,7 @@ function getView(viewName, args, success, failure) {
 function getResource(resourceName, args, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
-		httpCommand : 'GET',
-		contentType : "application/json",
+		httpCommand : 'GET'
 	}, success, failure);
 }
 
@@ -245,7 +285,6 @@ function postResource(resourceName, args, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
 		httpCommand : 'POST',
-		contentType : "application/json",
 		params : args
 	}, success, failure);
 }
@@ -256,7 +295,6 @@ function createNode(node, success, failure) {
 		servicePath : "node",
 		httpCommand : "POST",
 
-		contentType : "application/json",
 		params : JSON.stringify({
 			node : node
 		})
