@@ -343,7 +343,7 @@ function serializeDrupalViewsFilter(obj) {
 		}
 	}
 	return str.join("&");
-};
+}
 
 
 function encodeUrlString(args) {
