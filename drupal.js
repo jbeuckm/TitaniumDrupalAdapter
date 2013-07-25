@@ -7,7 +7,7 @@ function getCsrfToken(success, failure) {
 
 	// use previously loaded token
 	if (Ti.App.Properties.getString("X-CSRF-Token")) {
-		//		success(Ti.App.Properties.getString("X-CSRF-Token"));
+		success(Ti.App.Properties.getString("X-CSRF-Token"));
 	}
 
 	var xhr = Ti.Network.createHTTPClient();
@@ -31,6 +31,7 @@ function systemConnect(success, failure) {
 	var xhr = Titanium.Network.createHTTPClient();
 	xhr.open("POST", url);
 	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 	xhr.onload = function() {
 		var statusCode = xhr.status;
 		if (statusCode == 200) {
@@ -57,9 +58,8 @@ function createAccount(user, success, failure) {
 				Ti.App.Properties.setString("userUid", responseData.user.uid);
 				Ti.App.Properties.setString("userSessionId", responseData.sessid);
 				Ti.App.Properties.setString("userSessionName", responseData.session_name);
-Ti.API.trace('system/connect gives '+JSON.stringify(responseData));
-				registerNewUser(user, success, failure);
 
+				registerNewUser(user, success, failure);
 			},
 			function(e){
 				Ti.API.error(e);
@@ -77,7 +77,7 @@ function registerNewUser(user, success, failure) {
 Ti.API.info('will now register user '+JSON.stringify(user));	
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
-			servicePath : 'user/register',
+			servicePath : 'user/register.json',
 //			contentType: 'text/plain',
 //			skipCsrfToken: true,
 			params: user
@@ -94,45 +94,6 @@ Ti.API.info('will now register user '+JSON.stringify(user));
 		}
 	);
 
-/*
-	getCsrfToken(function(token) {
-
-		var xhr = Ti.Network.createHTTPClient();
-		xhr.open("POST", REST_PATH + "user/register");
-
-		xhr.setRequestHeader('Content-Type', 'application/json');
-		xhr.setRequestHeader("X-CSRF-Token", token);
-
-		xhr.onload = function() {
-			var statusCode = xhr.status;
-			Ti.API.debug('REGISTER ONLOAD');
-			if (statusCode == 200) {
-				var response = xhr.responseText;
-				var data = JSON.parse(response);
-				Ti.API.trace('user/register returned 200');
-				Ti.API.trace(data);
-
-				Ti.App.Properties.setInt("userUid", data.uid);
-
-				success(data);
-			} else {
-				Ti.API.error('create account returned status ' + xhr.statusCode);
-				failure(xhr.statusCode)
-			}
-		};
-		xhr.onerror = function(e) {
-			Ti.API.error("There was an error: " + e.error);
-
-			if (failure) {
-				failure(e);
-			}
-		};
-
-		xhr.send(JSON.stringify(user));
-	}, function(e) {
-		failure(e);
-	});
-*/
 }
 
 
@@ -239,10 +200,14 @@ function makeAuthenticatedRequest(config, success, failure) {
 	};
 
 	xhr.onload = function() {
+		Ti.API.trace('makeAuthReq returned with status '+xhr.status);
 		if (xhr.status == 200) {
-			success(JSON.parse(xhr.responseText));
-		} else {
-			failure(JSON.parse(xhr.responseText));
+			success(xhr.responseData);
+//			success(JSON.parse(xhr.responseText));
+		}
+		else {
+			failure(xhr.responseData);
+//			failure(JSON.parse(xhr.responseText));
 		}
 	};
 
@@ -254,7 +219,7 @@ function makeAuthenticatedRequest(config, success, failure) {
 		xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 	}
 	
-	xhr.setRequestHeader("Accepts", "application/json");
+//	xhr.setRequestHeader("Accepts", "application/json");
 
 	if (config.contentType) {
 		xhr.setRequestHeader("Content-Type", config.contentType);
@@ -373,6 +338,7 @@ function saveCredentials(username, password) {
 
 
 exports = {
+	systemConnect: systemConnect,
 	setRestPath : setRestPath,
 	createAccount : createAccount,
 	login : login,
