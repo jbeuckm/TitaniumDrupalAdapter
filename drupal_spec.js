@@ -1,7 +1,7 @@
 describe("Drupal Tests", function() {
 
 	var drupal = require('drupal/drupal');
-	drupal.setRestPath('http://usbpi.us/offersys-drupal/api/');
+	drupal.setRestPath('http://localhost:8888/api/');
 
 
 	describe("deals with Drupal data types", function(){
