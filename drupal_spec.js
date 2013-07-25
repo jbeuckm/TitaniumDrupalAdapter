@@ -1,7 +1,7 @@
 describe("Drupal Tests", function() {
 
 	var drupal = require('drupal/drupal');
-	drupal.setRestPath('http://localhost:8888/api/');
+	drupal.setRestPath('http://localhost:8888/servicestest/api/');
 
 
 	describe("deals with Drupal data types", function(){
@@ -112,8 +112,7 @@ Ti.API.error(responseData);
 		});
 
 
-		
-		xit("can log in and out", function() {
+		it("can log in and out", function() {
 			
 			var loggedin = false;
 			
@@ -123,7 +122,8 @@ Ti.API.error(responseData);
 					function() {
 						loggedin = true;
 					},
-					function() {
+					function(err) {
+						Ti.API.error(err);
 						loggedin = false;
 					}
 				);

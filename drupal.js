@@ -74,13 +74,11 @@ function createAccount(user, success, failure) {
 }
 
 function registerNewUser(user, success, failure) {
-Ti.API.info('will now register user '+JSON.stringify(user));	
+//Ti.API.info('will now register user '+JSON.stringify(user));	
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
 			servicePath : 'user/register.json',
-//			contentType: 'text/plain',
-//			skipCsrfToken: true,
-			params: user
+			params: JSON.stringify(user)
 		}, 
 		//success
 		function(responseData){
@@ -103,13 +101,29 @@ function login(username, password, success, failure) {
 		username : username,
 		password : password
 	};
+/*
+	makeAuthenticatedRequest({
+			httpCommand : 'POST',
+			servicePath : 'user/login',
+			params: JSON.stringify(user)
+		},
+		success,
+		failure
+	);
+*/
+
 	var url = REST_PATH + 'user/login';
 	var xhr = Ti.Network.createHTTPClient();
 	xhr.open("POST", url);
 
-	xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-	xhr.setRequestHeader("Accepts", "application/json");
-	//	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+	xhr.setRequestHeader('Content-Type', 'application/json');
+
+	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
+	xhr.setRequestHeader("Cookie", authString);
+
+	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+
+//	xhr.setRequestHeader("Accepts", "application/json");
 
 	xhr.onload = function() {
 
@@ -157,10 +171,10 @@ function logout(success, failure) {
 		servicePath : 'user/logout'
 	}, function() {
 		Ti.App.Properties.removeProperty("userUid");
+		Ti.App.Properties.removeProperty("userName");
 		Ti.App.Properties.removeProperty("userSessionId");
 		Ti.App.Properties.removeProperty("userSessionName");
-		Ti.App.Properties.removeProperty("userName");
-		Ti.App.Properties.removeProperty("X-CSRF-Token")
+//		Ti.App.Properties.removeProperty("X-CSRF-Token");
 		success();
 	}, failure);
 
@@ -203,18 +217,15 @@ function makeAuthenticatedRequest(config, success, failure) {
 		Ti.API.trace('makeAuthReq returned with status '+xhr.status);
 		if (xhr.status == 200) {
 			success(xhr.responseData);
-//			success(JSON.parse(xhr.responseText));
 		}
 		else {
 			failure(xhr.responseData);
-//			failure(JSON.parse(xhr.responseText));
 		}
 	};
 
 	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
-
-
 	xhr.setRequestHeader("Cookie", authString);
+
 	if (!config.skipCsrfToken) {
 		xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 	}
