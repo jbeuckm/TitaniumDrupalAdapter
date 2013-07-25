@@ -1,19 +1,85 @@
 describe("Drupal Tests", function() {
 
-	var drupal = require('/drupal/drupal');
+	var drupal = require('drupal/drupal');
+	drupal.setRestPath('http://usbpi.us/offersys-drupal/api/');
+
+
+	describe("deals with Drupal data types", function(){
+		
+		it("serializes filter parameters for drupal", function(){
+			var params = {
+				'arg[]': [1,2,3]
+			};
+			var request = drupal.serializeDrupalViewsFilter(params);
+			
+			expect(decodeURIComponent(request)).toEqual('arg[]=1&arg[]=2&arg[]=3');
+		});
+
+	});
 
 	describe("can create account & login", function() {
 		
+		var username = 'drupalspec'+createRandomString(8);
 		var user = {
-			name: 'drupalspec'+createRandomString(8),
-			pass: 'drupalspec'+createRandomString(8),
-			mail: 'drupalspec'+createRandomString(8)+'@drupalspec'+createRandomString(4)+'.com'
+			name: username,
+			pass: createRandomString(8),
+			mail: username+'@drupalspec.com'
 		};
+		var uid = 0;
 			
 
 		beforeEach(function() {
 //			Ti.App.Properties.removeProperty("X-CSRF-Token")
 		});
+
+		it("calls system.connect", function() {
+			
+			var connected = false;
+			
+			runs(function(){
+				
+				drupal.systemConnect(
+					function(responseData) {
+
+						uid = responseData.user.uid;
+Ti.API.info('system.connect gives user '+uid);
+						connected = true;
+					},
+					function(responseData) {
+Ti.API.error(responseData);
+						connected = false;
+					}
+				);
+			});
+				
+			waitsFor(function(){ return connected; }, 'problem connecting', 2500);
+
+		});
+		
+		it("logs out if necessary", function() {
+			
+			var loggedout = false;
+			
+			runs(function() {
+				if (uid != 0) {
+					drupal.logout(
+						function(){
+							loggedout = true;
+						}, 
+						function() {
+							loggedout = false;
+						}
+					);
+				}
+				else {
+					loggedout = true;
+				}
+			});
+			
+			waitsFor(function(){ return loggedout; }, "could not log out", 2500);
+			
+		});
+
 
 		it("registers an account", function() {
 
@@ -47,24 +113,9 @@ describe("Drupal Tests", function() {
 
 
 		
-		it("can log in and out", function() {
+		xit("can log in and out", function() {
 			
-			var loggedin = true;
-			
-			// ensure logged out before attempt login
-			runs(function() {
-				drupal.logout(
-					function() {
-						loggedin = false;
-					},
-					function() {
-						loggedin = false;
-					}
-				);
-			});
-			waitsFor(function(){
-				return !loggedin;
-			}, 'logged out before running the login test', 2500);
+			var loggedin = false;
 			
 			// login as the previously created test user
 			runs(function() {
