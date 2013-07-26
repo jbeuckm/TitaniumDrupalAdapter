@@ -8,6 +8,7 @@ function getCsrfToken(success, failure) {
 	// use previously loaded token
 	if (Ti.App.Properties.getString("X-CSRF-Token")) {
 		success(Ti.App.Properties.getString("X-CSRF-Token"));
+		return;
 	}
 
 	var xhr = Ti.Network.createHTTPClient();
@@ -26,15 +27,21 @@ function getCsrfToken(success, failure) {
 
 
 function systemConnect(success, failure) {
+    
+    var cookie = Ti.App.Properties.getString("Drupal-Cookie");
+    if (cookie) {
+        success(cookie);
+        return;
+    }
 
 	var url = REST_PATH + 'system/connect.json';
-	var xhr = Titanium.Network.createHTTPClient();
+	var xhr = Ti.Network.createHTTPClient();
 	xhr.open("POST", url);
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 	xhr.onload = function() {
-		var statusCode = xhr.status;
-		if (statusCode == 200) {
+
+		if (xhr.status == 200) {
 			var response = xhr.responseText;
 			var responseData = JSON.parse(response);
 
@@ -42,6 +49,9 @@ function systemConnect(success, failure) {
             Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
 			success(responseData);
+		}
+		else {
+		    failure(xhr.responseText);
 		}
 	};
 	xhr.onerror = function(e) {
@@ -97,36 +107,35 @@ function makeAuthenticatedRequest(config, success, failure) {
 
 function createAccount(user, success, failure) {
 
-	getCsrfToken(function(token) {
-
-		systemConnect(
-			function(responseData){
-	
-				Ti.App.Properties.setString("userUid", responseData.user.uid);
-				
-				var cookie = responseData.session_name+'='+responseData.sessid;
-				Ti.App.Properties.setString("Drupal-Cookie", cookie);
-
-				registerNewUser(user, success, failure);
-			},
-			function(e){
-				Ti.API.error(e);
-				failure(e);
-			}
-		);
-
-	},
-	function(err){
-		failure(err);
-	});
+	getCsrfToken(
+	    // success getting token
+	    function(token) {
+    
+    		systemConnect(
+    			function(responseData){
+    				registerNewUser(user, success, failure);
+    			},
+    			function(e){
+    				Ti.API.error(e);
+    				failure(e);
+    			}
+    		);
+    
+    	},
+    	// failed to get token
+    	function(err){
+    		failure(err);
+    	}
+	);
 }
 
 function registerNewUser(user, success, failure) {
-//Ti.API.info('will now register user '+JSON.stringify(user));	
+Ti.API.info('will now register user '+JSON.stringify(user));	
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
-			servicePath : 'user/register.json',
-			params: JSON.stringify(user)
+			servicePath : 'user/register',
+			skipCsrfToken: true,
+			params: user
 		}, 
 		//success
 		function(responseData){
