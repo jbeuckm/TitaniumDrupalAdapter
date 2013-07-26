@@ -1,6 +1,11 @@
 var REST_PATH;
-function setRestPath(path) {
-	REST_PATH = path;
+var SITE_ROOT;
+var SERVICE_ENDPOINT;
+
+function setRestPath(root, endpoint) {
+	SITE_ROOT = root;
+	SERVICE_ENDPOINT = endpoint;
+	REST_PATH = root + endpoint + '/';
 }
 
 function getCsrfToken(success, failure) {
@@ -12,7 +17,7 @@ function getCsrfToken(success, failure) {
 	}
 
 	var xhr = Ti.Network.createHTTPClient();
-	var tokenPath = REST_PATH.replace('api/', 'services/session/token');
+	var tokenPath = SITE_ROOT + 'services/session/token';
 
 	xhr.onload = function() {
 		Ti.App.Properties.setString("X-CSRF-Token", xhr.responseText);
