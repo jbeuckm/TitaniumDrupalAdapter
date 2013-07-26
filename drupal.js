@@ -96,15 +96,16 @@ function makeAuthenticatedRequest(config, success, failure) {
     xhr.onload = function() {
         Ti.API.trace('makeAuthReq returned with status '+xhr.status);
         if (xhr.status == 200) {
-            success(xhr.responseData);
+        	var responseData = JSON.parse(xhr.responseText);
+            success(responseData);
         }
         else {
-            failure(xhr.responseData);
+            failure(xhr.responseText);
         }
     };
 
-    var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
-    xhr.setRequestHeader("Cookie", authString);
+
+    xhr.setRequestHeader("Cookie", Ti.App.Properties.getString("Drupal-Cookie") );
 
     if (!config.skipCsrfToken) {
         xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
@@ -190,12 +191,11 @@ function login(username, password, success, failure) {
 
 	xhr.setRequestHeader('Content-Type', 'application/json');
 
-//	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
 	xhr.setRequestHeader("Cookie", Ti.App.Properties.getString("Drupal-Cookie"));
 
 	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 
-//	xhr.setRequestHeader("Accepts", "application/json");
+//	xhr.setRequestHeader("Accept", "application/json");
 
 	xhr.onload = function() {
 
