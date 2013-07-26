@@ -29,18 +29,22 @@ function getCsrfToken(success, failure) {
 var connectObject;
 
 function systemConnect(success, failure) {
-    
+
     var cookie = Ti.App.Properties.getString("Drupal-Cookie");
     if (cookie) {
         success(connectObject);
         return;
     }
+    
+    getCsrfToken(function(){
 
 	var url = REST_PATH + 'system/connect.json';
 	var xhr = Ti.Network.createHTTPClient();
 	xhr.open("POST", url);
+
 	xhr.setRequestHeader('Content-Type', 'application/json');
 	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+
 	xhr.onload = function() {
 
 		if (xhr.status == 200) {
@@ -59,11 +63,15 @@ function systemConnect(success, failure) {
 		}
 	};
 	xhr.onerror = function(e) {
-		alert("There was an error: " + e.error);
-
+		Ti.API.error("There was an error: " + e.error);
 		failure(e);
 	};
 	xhr.send();
+	
+	},
+	function(err){
+	    failure(err);
+	});
 }
 
 
@@ -163,12 +171,13 @@ function login(username, password, success, failure) {
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
 			servicePath : 'user/login',
+            contentType: "application/json",
 			params: JSON.stringify(user)
 		},
 		success,
 		failure
 	);
-*/
+/*/
 
 	var url = REST_PATH + 'user/login';
 	var xhr = Ti.Network.createHTTPClient();
@@ -194,18 +203,9 @@ function login(username, password, success, failure) {
 			var data = JSON.parse(response);
 
 			Ti.App.Properties.setString("userUid", data.user.uid);
-            
-            var cookie = responseData.session_name+'='+responseData.sessid;
-            Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
+			success(data.user);
 
-			getCsrfToken(
-			// success - now login with token
-			function(token) {
-				success(data.user);
-			}, function(e) {
-				failure(e);
-			});
 		} else {
 			Ti.API.error('login status = ' + statusCode);
 

@@ -1,7 +1,7 @@
 describe("Drupal Tests", function() {
 
 	var drupal = require('drupal/drupal');
-	drupal.setRestPath('http://localhost:8888/servicestest/api/');
+	drupal.setRestPath('http://www.yourserver.com/api/');
 
 
 	describe("deals with Drupal data types", function(){
@@ -23,7 +23,8 @@ describe("Drupal Tests", function() {
 		var user = {
 			name: username,
 			pass: createRandomString(8),
-			mail: username+'@drupalspec.com'
+			mail: username+'@drupalspec.com',
+			status: 1
 		};
 		var uid = 0;
 			
@@ -42,11 +43,10 @@ describe("Drupal Tests", function() {
 					function(responseData) {
 
 						uid = responseData.user.uid;
-Ti.API.info('system.connect gives user '+uid);
+                        Ti.API.debug('system.connect gives user '+uid);
 						connected = true;
 					},
 					function(responseData) {
-Ti.API.error(responseData);
 						connected = false;
 					}
 				);
@@ -112,7 +112,32 @@ Ti.API.error(responseData);
 		});
 
 
-		it("can log in and out", function() {
+        it("logs out if necessary", function() {
+            
+            var loggedout = false;
+            
+            runs(function() {
+                if (uid != 0) {
+                    drupal.logout(
+                        function(){
+                            loggedout = true;
+                        }, 
+                        function() {
+                            loggedout = false;
+                        }
+                    );
+                }
+                else {
+                    loggedout = true;
+                }
+            });
+            
+            waitsFor(function(){ return loggedout; }, "could not log out", 2500);
+            
+        });
+        
+
+		it("can log in", function() {
 			
 			var loggedin = false;
 			
@@ -120,6 +145,7 @@ Ti.API.error(responseData);
 			runs(function() {
 				drupal.login(user.name, user.pass,
 					function() {
+					    Ti.API.info('spec login succeeded');
 						loggedin = true;
 					},
 					function(err) {
@@ -129,20 +155,8 @@ Ti.API.error(responseData);
 				);
 			});
 
-			waitsFor(function(){ return loggedin; }, 'logged in', 2500);
+			waitsFor(function(){ return loggedin; }, 'logged in', 5000);
 			
-			runs(function() {
-				drupal.logout(
-					function() {
-						loggedin = false;
-					},
-					function() {
-						loggedin = true;
-					}
-				);
-			});
-
-			waitsFor(function(){ return !loggedin; }, 'logged out', 2500);
 		});
 
 	});
