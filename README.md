@@ -56,7 +56,7 @@ drupal.createAccount(user,
 
 ### Make Requests
 
-The workhorse function of the interface is `makeAuthenticatedRequest(config, success, failure)`. There are a few helper functions included for posting/getting nodes, getting views, uploading files, etc. But they typically all construct a call to `makeAuthenticatedRequest`.
+The workhorse function of the interface is `makeAuthenticatedRequest(config, success, failure)`. There are a few helper functions included for posting/getting nodes, getting views, uploading files, etc. But they typically all construct a call to `makeAuthenticatedRequest`. That function should allow most things that people want to do with Drupal in a mobile environment.
 
 
 # Jasmine
