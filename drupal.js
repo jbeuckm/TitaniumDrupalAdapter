@@ -85,6 +85,7 @@ function makeAuthenticatedRequest(config, success, failure) {
     var url = REST_PATH + config.servicePath;
 
     var xhr = Titanium.Network.createHTTPClient();
+Ti.API.debug('will now '+config.httpCommand+' to '+url);
     xhr.open(config.httpCommand, url);
 
     xhr.onerror = function(e) {
@@ -265,6 +266,15 @@ function postResource(resourceName, args, success, failure) {
 	}, success, failure);
 }
 
+function putResource(resourceName, object, success, failure) {
+	makeAuthenticatedRequest({
+		servicePath : resourceName,
+		httpCommand : 'PUT',
+		contentType: 'application/json',
+		params : object
+	}, success, failure);
+}
+
 function createNode(node, success, failure) {
 
 	makeAuthenticatedRequest({
@@ -350,6 +360,7 @@ exports = {
 	getResource : getResource,
 	serializeDrupalViewsFilter: serializeDrupalViewsFilter,
 	makeAuthenticatedRequest : makeAuthenticatedRequest,
+	putResource: putResource,
 	getView : getView,
 	logout : logout
 };
