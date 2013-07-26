@@ -17,7 +17,7 @@ var drupal = require('drupal');
 drupal.setRestPath(url);
 ```
 
-Get a session by calling system.connect:
+### Get a session
 
 ```javascript
 drupal.systemConnect(
@@ -32,7 +32,7 @@ drupal.systemConnect(
 );
 ```
 
-Create an account:
+### Create an account
 
 ```javascript 
 var user = {
