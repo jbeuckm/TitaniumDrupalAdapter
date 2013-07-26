@@ -26,11 +26,13 @@ function getCsrfToken(success, failure) {
 }
 
 
+var connectObject;
+
 function systemConnect(success, failure) {
     
     var cookie = Ti.App.Properties.getString("Drupal-Cookie");
     if (cookie) {
-        success(cookie);
+        success(connectObject);
         return;
     }
 
@@ -45,6 +47,8 @@ function systemConnect(success, failure) {
 			var response = xhr.responseText;
 			var responseData = JSON.parse(response);
 
+            connectObject = responseData;
+            
             var cookie = responseData.session_name+'='+responseData.sessid;
             Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
@@ -93,13 +97,10 @@ function makeAuthenticatedRequest(config, success, failure) {
         xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
     }
     
-//  xhr.setRequestHeader("Accepts", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
 
     if (config.contentType) {
         xhr.setRequestHeader("Content-Type", config.contentType);
-    }
-    else {
-        xhr.setRequestHeader("Content-Type", "application/json");
     }
 
     xhr.send(config.params);
@@ -133,9 +134,9 @@ function registerNewUser(user, success, failure) {
 Ti.API.info('will now register user '+JSON.stringify(user));	
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
-			servicePath : 'user/register',
-			skipCsrfToken: true,
-			params: user
+			servicePath : 'user/register.json',
+			contentType: "application/json",
+			params: JSON.stringify(user)
 		}, 
 		//success
 		function(responseData){
