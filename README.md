@@ -32,6 +32,29 @@ drupal.systemConnect(
 );
 ```
 
+Create an account:
+
+```javascript 
+var user = {
+	name: username,
+	pass: createRandomString(8),
+	mail: username+'@drupalspec.com',
+	status: 1
+};
+
+drupal.createAccount(user,
+	//success
+	function(userData) {
+		alert('yay!');
+	},
+	//failure
+	function(error) {
+		alert('boo :(');
+	}
+);	
+```
+
+
 # Jasmine
 
 The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your root spec/ folder and set your service endpoint to "api".
