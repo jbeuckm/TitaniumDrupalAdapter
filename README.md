@@ -1,5 +1,5 @@
 
-***Requirements***
+**Requirements**
 
 1. An installation of Drupal 7.x
 2. Services Module 3.4+ (implements the CSRF token for updated REST security)
@@ -7,9 +7,9 @@
 4. A Titanium project - probably works with most versions since this only uses Ti.Network.HTTPClient
 
 
-***Usage***
+**Usage**
 
-Create a Service and enable (at least) the Resources called System and User. Call `setRestPath()` with the url of your server/endpoint.
+Create a Service and enable (at least) the Resources called "system" and "user". Call `setRestPath()` with the url of your server/endpoint.
 
 ```javascript
 var drupal = require('drupal');
@@ -22,16 +22,17 @@ Get a session by calling system.connect:
 ```javascript
 drupal.systemConnect(
 	//success
-	function(response) {
+	function(sessionData) {
 		alert('yay!');
 	},
 	//failure
-	function(response) {
+	function(error) {
 		alert('boo :(');
 	}
 );
 ```
 
- If you want to run the Jasmine spec included, set up your service endpoint to "api".
+**Jasmine**
 
-   1. 
+The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your root spec/ folder and set your service endpoint to "api".
+
