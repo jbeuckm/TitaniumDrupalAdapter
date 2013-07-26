@@ -1,4 +1,3 @@
-
 # Requirements
 
 1. An installation of Drupal 7.x
@@ -9,12 +8,12 @@
 
 # Usage
 
-Create a Service and enable (at least) the Resources called "system" and "user". Call `setRestPath()` with the url of your server/endpoint.
+Create a Service and enable (at least) the Resources called "system" and "user". Call `setRestPath()` with the url of your Drupal install and your service endpoint.
 
 ```javascript
 var drupal = require('drupal');
 
-drupal.setRestPath(url);
+drupal.setRestPath('http://myserver.com/drupal/', 'my_api_endpoint');
 ```
 
 ### Get a session
@@ -61,5 +60,5 @@ The workhorse function of the interface is `makeAuthenticatedRequest(config, suc
 
 # Jasmine
 
-The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your project's root spec/ folder and set your Drupal service endpoint to "api". Edit `drupal_spec.js` to point to the `drupal` module location and the absolute url your server/api endpoint.
+The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your project's root spec/ folder. Edit `drupal_spec.js` to point to the `drupal` module location and the absolute url your server and api endpoint.
 
