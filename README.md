@@ -61,5 +61,5 @@ The workhorse function of the interface is `makeAuthenticatedRequest(config, suc
 
 # Jasmine
 
-The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your root spec/ folder and set your service endpoint to "api".
+The included spec is intended to be run with TiShadow and Jasmine. To make it work, copy the spec into your root spec/ folder and set your service endpoint to "api". Edit `drupal_spec.js" to point to the `drupal` module location and the absolute url your server/api endpoint.
 
