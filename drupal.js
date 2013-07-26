@@ -36,8 +36,12 @@ function systemConnect(success, failure) {
 		var statusCode = xhr.status;
 		if (statusCode == 200) {
 			var response = xhr.responseText;
-			var data = JSON.parse(response);
-			success(data);
+			var responseData = JSON.parse(response);
+
+            var cookie = responseData.session_name+'='+responseData.sessid;
+            Ti.App.Properties.setString("Drupal-Cookie", cookie);
+
+			success(responseData);
 		}
 	};
 	xhr.onerror = function(e) {
@@ -56,8 +60,11 @@ function createAccount(user, success, failure) {
 			function(responseData){
 	
 				Ti.App.Properties.setString("userUid", responseData.user.uid);
-				Ti.App.Properties.setString("userSessionId", responseData.sessid);
-				Ti.App.Properties.setString("userSessionName", responseData.session_name);
+				
+				var cookie = responseData.session_name+'='+responseData.sessid;
+				Ti.App.Properties.setString("Drupal-Cookie", cookie);
+//				Ti.App.Properties.setString("userSessionId", responseData.sessid);
+//				Ti.App.Properties.setString("userSessionName", responseData.session_name);
 
 				registerNewUser(user, success, failure);
 			},
@@ -118,8 +125,8 @@ function login(username, password, success, failure) {
 
 	xhr.setRequestHeader('Content-Type', 'application/json');
 
-	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
-	xhr.setRequestHeader("Cookie", authString);
+//	var authString = Ti.App.Properties.getString("userSessionName") + '=' + Ti.App.Properties.getString("userSessionId");
+	xhr.setRequestHeader("Cookie", Ti.App.Properties.getString("Drupal-Cookie"));
 
 	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
 
@@ -136,8 +143,11 @@ function login(username, password, success, failure) {
 			var data = JSON.parse(response);
 
 			Ti.App.Properties.setString("userUid", data.user.uid);
-			Ti.App.Properties.setString("userSessionId", data.sessid);
-			Ti.App.Properties.setString("userSessionName", data.session_name);
+//			Ti.App.Properties.setString("userSessionId", data.sessid);
+//          Ti.App.Properties.setString("userSessionName", data.session_name);
+            
+            var cookie = responseData.session_name+'='+responseData.sessid;
+            Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
 			saveCredentials(username, password);
 
@@ -172,8 +182,9 @@ function logout(success, failure) {
 	}, function() {
 		Ti.App.Properties.removeProperty("userUid");
 		Ti.App.Properties.removeProperty("userName");
-		Ti.App.Properties.removeProperty("userSessionId");
-		Ti.App.Properties.removeProperty("userSessionName");
+//		Ti.App.Properties.removeProperty("userSessionId");
+//        Ti.App.Properties.removeProperty("userSessionName");
+        Ti.App.Properties.removeProperty("Drupal-Cookie");
 //		Ti.App.Properties.removeProperty("X-CSRF-Token");
 		success();
 	}, failure);
