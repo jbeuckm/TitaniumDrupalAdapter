@@ -1,7 +1,37 @@
-***Under Construction***
 
-![alt text](http://i143.photobucket.com/albums/r132/Reuling_63/Gif/stillunderconstruction.gif "UNDER CONSTRUCTION")
+***Requirements***
 
-Here is the issue I'm working on with the new Services 3.4 CSRF Token setup:
+1. An installation of Drupal 7.x
+2. Services Module 3.4+ (implements the CSRF token for updated REST security)
+3. REST Server module enabled
+4. A Titanium project - probably works with most versions since this only uses Ti.Network.HTTPClient
 
-   1. [http://drupal.stackexchange.com/questions/79497/user-registration-sequence-for-services-3-4](http://drupal.stackexchange.com/questions/79497/user-registration-sequence-for-services-3-4)
+
+***Usage***
+
+Create a Service and enable (at least) the Resources called System and User. Call `setRestPath()` with the url of your server/endpoint.
+
+```javascript
+var drupal = require('drupal');
+
+drupal.setRestPath(url);
+```
+
+Get a session by calling system.connect:
+
+```javascript
+drupal.systemConnect(
+	//success
+	function(response) {
+		alert('yay!');
+	},
+	//failure
+	function(response) {
+		alert('boo :(');
+	}
+);
+```
+
+ If you want to run the Jasmine spec included, set up your service endpoint to "api".
+
+   1. 
