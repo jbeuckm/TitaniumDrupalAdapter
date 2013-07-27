@@ -22,7 +22,8 @@ drupal.setRestPath('http://myserver.com/drupal/', 'my_api_endpoint');
 drupal.systemConnect(
 	//success
 	function(sessionData) {
-		alert('yay!');
+		var uid = sessionData.user.uid;
+		alert('logged in as user '+uid);
 	},
 	//failure
 	function(error) {
