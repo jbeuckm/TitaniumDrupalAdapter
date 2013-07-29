@@ -36,10 +36,9 @@ drupal.systemConnect(
 
 ```javascript 
 var user = {
-	name: username,
-	pass: createRandomString(8),
-	mail: username+'@drupalspec.com',
-	status: 1
+	name: 'my_new_username',
+	pass: 'my_new_password',
+	mail: 'my_email@drupal-ti.com'
 };
 
 drupal.createAccount(user,
