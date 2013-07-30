@@ -43,35 +43,35 @@ function systemConnect(success, failure) {
     
     getCsrfToken(function(){
 
-	var url = REST_PATH + 'system/connect.json';
-	var xhr = Ti.Network.createHTTPClient();
-	xhr.open("POST", url);
-
-	xhr.setRequestHeader('Content-Type', 'application/json');
-	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
-
-	xhr.onload = function() {
-
-		if (xhr.status == 200) {
-			var response = xhr.responseText;
-			var responseData = JSON.parse(response);
-
-            connectObject = responseData;
-            
-            var cookie = responseData.session_name+'='+responseData.sessid;
-            Ti.App.Properties.setString("Drupal-Cookie", cookie);
-
-			success(responseData);
-		}
-		else {
-		    failure(xhr.responseText);
-		}
-	};
-	xhr.onerror = function(e) {
-		Ti.API.error("There was an error: " + e.error);
-		failure(e);
-	};
-	xhr.send();
+		var url = REST_PATH + 'system/connect.json';
+		var xhr = Ti.Network.createHTTPClient();
+		xhr.open("POST", url);
+	
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+	
+		xhr.onload = function() {
+	
+			if (xhr.status == 200) {
+				var response = xhr.responseText;
+				var responseData = JSON.parse(response);
+	
+	            connectObject = responseData;
+	            
+	            var cookie = responseData.session_name+'='+responseData.sessid;
+	            Ti.App.Properties.setString("Drupal-Cookie", cookie);
+	
+				success(responseData);
+			}
+			else {
+			    failure(xhr.responseText);
+			}
+		};
+		xhr.onerror = function(e) {
+			Ti.API.error("There was an error: " + e.error);
+			failure(e);
+		};
+		xhr.send();
 	
 	},
 	function(err){
@@ -81,11 +81,14 @@ function systemConnect(success, failure) {
 
 
 function makeAuthenticatedRequest(config, success, failure) {
+	
+	var trace = "makeAuthenticatedRequest()\n";
 
     var url = REST_PATH + config.servicePath;
 
     var xhr = Titanium.Network.createHTTPClient();
-Ti.API.debug('will now '+config.httpCommand+' to '+url);
+	trace += config.httpCommand+' '+url+"\n";
+    
     xhr.open(config.httpCommand, url);
 
     xhr.onerror = function(e) {
@@ -106,20 +109,31 @@ Ti.API.debug('will now '+config.httpCommand+' to '+url);
     };
 
 
-    xhr.setRequestHeader("Cookie", Ti.App.Properties.getString("Drupal-Cookie") );
+	var cookie = Ti.App.Properties.getString("Drupal-Cookie");
+    xhr.setRequestHeader("Cookie", cookie);
+    trace += "Cookie: " + cookie + "\n";
 
     if (!config.skipCsrfToken) {
-        xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+    	var token = Ti.App.Properties.getString("X-CSRF-Token");
+        xhr.setRequestHeader("X-CSRF-Token", token);
+        trace += "X-CSRF-Token: " + token + "\n";
     }
     
     xhr.setRequestHeader("Accept", "application/json");
-
+	trace += "Accept: application/json\n"
     if (config.contentType) {
         xhr.setRequestHeader("Content-Type", config.contentType);
+        trace += "Content-Type: " + config.contentType+"\n";
     }
+
+	if (config.trace) {
+		Ti.API.trace(trace);
+		Ti.API.trace(config.params);
+	}
 
     xhr.send(config.params);
 }
+
 
 function createAccount(user, success, failure) {
 
@@ -150,7 +164,7 @@ Ti.API.info('will now register user '+JSON.stringify(user));
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
 			servicePath : 'user/register.json',
-			contentType: "application/json",
+			contentType: 'application/json',
 			params: JSON.stringify(user)
 		}, 
 		//success
@@ -174,57 +188,34 @@ function login(username, password, success, failure) {
 		username : username,
 		password : password
 	};
-/*
-	makeAuthenticatedRequest({
-			httpCommand : 'POST',
-			servicePath : 'user/login',
-            contentType: "application/json",
-			params: JSON.stringify(user)
-		},
-		success,
-		failure
-	);
-/*/
 
-	var url = REST_PATH + 'user/login';
-	var xhr = Ti.Network.createHTTPClient();
-	xhr.open("POST", url);
-
-	xhr.setRequestHeader('Content-Type', 'application/json');
-
-	xhr.setRequestHeader("Cookie", Ti.App.Properties.getString("Drupal-Cookie"));
-
-	xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
-
-//	xhr.setRequestHeader("Accept", "application/json");
-
-	xhr.onload = function() {
-
-		var statusCode = xhr.status;
-		if (statusCode == 200) {
-
-			Ti.API.info('login status 200');
-
-			var response = xhr.responseText;
-			var data = JSON.parse(response);
-
-			Ti.App.Properties.setString("userUid", data.user.uid);
-
-			success(data.user);
-
-		} else {
-			Ti.API.error('login status = ' + statusCode);
-
-			failure(xhr);
+	systemConnect(function(resp){
+		
+		Ti.API.trace('login got this from systemConnect: '+JSON.stringify(resp));
+		
+		if (resp.user.uid != 0) {
+			Ti.API.debug('already logged in - returning systemConnect session');
+			success(resp.user);
 		}
-	}
-	xhr.onerror = function(e) {
+		else {
+			Ti.API.debug('user is anonymous - logging in with new session');
+			makeAuthenticatedRequest({
+					httpCommand : 'POST',
+					servicePath : 'user/login',
+		            contentType: "application/json",
+					params: JSON.stringify(user)
+				},
+				function(responseData) {
 
-		Ti.API.error('login http error ' + JSON.stringify(e));
+		            var cookie = responseData.session_name+'='+responseData.sessid;
+		            Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
-		failure(e);
-	}
-	xhr.send(JSON.stringify(user));
+					success(responseData.user);
+				},
+				failure);
+		}
+	
+	}, failure);
 
 };
 
