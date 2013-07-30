@@ -38,7 +38,7 @@ drupal.systemConnect(
 var user = {
 	name: 'my_new_username',
 	pass: 'my_new_password',
-	mail: 'my_email@drupal-ti.com'
+	mail: 'my_email@titaniumdrupal.com'
 };
 
 drupal.createAccount(user,
