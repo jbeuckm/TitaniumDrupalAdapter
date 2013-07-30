@@ -209,6 +209,7 @@ function login(username, password, success, failure) {
 
 		            var cookie = responseData.session_name+'='+responseData.sessid;
 		            Ti.App.Properties.setString("Drupal-Cookie", cookie);
+		            Ti.API.trace('login saving new cookie '+cookie);
 
 					success(responseData.user);
 				},
