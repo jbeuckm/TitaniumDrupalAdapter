@@ -89,6 +89,11 @@ function makeAuthenticatedRequest(config, success, failure) {
     var xhr = Titanium.Network.createHTTPClient();
 	trace += config.httpCommand+' '+url+"\n";
     
+	// override timeout if necessary
+	if (config.timeout) {
+		xhr.timeout = config.timeout;
+	}
+
     xhr.open(config.httpCommand, url);
 
     xhr.onerror = function(e) {
@@ -126,11 +131,12 @@ function makeAuthenticatedRequest(config, success, failure) {
         trace += "Content-Type: " + config.contentType+"\n";
     }
 
+	// optionally output a summary of the request
 	if (config.trace) {
 		Ti.API.trace(trace);
 		Ti.API.trace(config.params);
 	}
-
+	
     xhr.send(config.params);
 }
 
@@ -163,9 +169,11 @@ function registerNewUser(user, success, failure) {
 Ti.API.info('will now register user '+JSON.stringify(user));	
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
-			servicePath : 'user/register.json',
+			servicePath : 'user/register',
 			contentType: 'application/json',
-			params: JSON.stringify(user)
+			params: JSON.stringify(user),
+			timeout: 250000,
+			trace: true
 		}, 
 		//success
 		function(responseData){

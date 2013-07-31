@@ -23,11 +23,11 @@ drupal.systemConnect(
 	//success
 	function(sessionData) {
 		var uid = sessionData.user.uid;
-		alert('logged in as user '+uid);
+		Ti.API.info('logged in as user '+uid);
 	},
 	//failure
 	function(error) {
-		alert('boo :(');
+		Ti.API.error('boo :(');
 	}
 );
 ```
@@ -44,15 +44,50 @@ var user = {
 drupal.createAccount(user,
 	//success
 	function(userData) {
-		alert('yay!');
+		Ti.API.info('yay!');
 	},
 	//failure
 	function(error) {
-		alert('boo :(');
+		Ti.API.error('boo :(');
 	}
 );	
 ```
 
+### Login
+
+```javascript
+
+var my_username = "<DRUPAL USERNAME>";
+var my_password = "<DRUPAL PASSWORD>";
+
+var userObject;
+
+drupal.login(my_username, my_password,
+	function(userData) {
+		Ti.API.info('User ' + userData.uid + ' has logged in.');
+		userObject = userData;
+	},
+	function(err){
+		Ti.API.error('login failed.');
+	}
+);
+```
+
+### Modify User Info
+
+This updates an account profile on the server. *userObject* is an object that may have been received from a login request (see above).
+
+```javascript
+drupal.putResource("user/"+userObject.uid, userObject, 
+	function(userData) {
+		Ti.API.info('user has been updated.');
+	},
+	function(err){
+		Ti.API.error('user update failed.');
+	}
+);
+	
+```
 ### Make Requests
 
 The workhorse function of the interface is `makeAuthenticatedRequest(config, success, failure)`. There are a few helper functions included for posting/getting nodes, getting views, uploading files, etc. But they typically all construct a call to `makeAuthenticatedRequest`. That function should allow most things that people want to do with Drupal in a mobile environment.
