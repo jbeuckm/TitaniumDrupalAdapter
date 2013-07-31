@@ -89,7 +89,7 @@ function makeAuthenticatedRequest(config, success, failure) {
     var xhr = Titanium.Network.createHTTPClient();
 	trace += config.httpCommand+' '+url+"\n";
     
-	// override timeout if necessary
+	// optionally override timeout
 	if (config.timeout) {
 		xhr.timeout = config.timeout;
 	}
@@ -99,16 +99,19 @@ function makeAuthenticatedRequest(config, success, failure) {
     xhr.onerror = function(e) {
         Ti.API.error(JSON.stringify(e));
 
+		Ti.API.error('HERE WAS THE FAILED REQUEST:');
+		Ti.API.error(trace);
+
         failure(e);
     };
 
     xhr.onload = function() {
-        Ti.API.trace('makeAuthReq returned with status '+xhr.status);
         if (xhr.status == 200) {
         	var responseData = JSON.parse(xhr.responseText);
             success(responseData);
         }
         else {
+	        Ti.API.trace('makeAuthReq returned with status '+xhr.status);
             failure(xhr.responseText);
         }
     };
@@ -172,8 +175,7 @@ Ti.API.info('will now register user '+JSON.stringify(user));
 			servicePath : 'user/register',
 			contentType: 'application/json',
 			params: JSON.stringify(user),
-			timeout: 250000,
-			trace: true
+			timeout: 250000
 		}, 
 		//success
 		function(responseData){
