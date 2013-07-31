@@ -75,7 +75,7 @@ drupal.login(my_username, my_password,
 
 ### Modify User Info
 
-This updates an account profile on the server. *userObject* is an object that may have been received from a login request (see above).
+This updates an account profile on the server. `userObject` is a user object that may have been received from a login request (see above).
 
 ```javascript
 drupal.putResource("user/"+userObject.uid, userObject, 
@@ -90,10 +90,10 @@ drupal.putResource("user/"+userObject.uid, userObject,
 ```
 ### Make Requests
 
-The workhorse function of the interface is `makeAuthenticatedRequest(config, success, failure)`. There are a few helper functions included for posting/getting nodes, getting views, uploading files, etc. But they typically all construct a call to `makeAuthenticatedRequest`. That function should allow most things that people want to do with Drupal in a mobile environment.
+The workhorse function of the interface is `makeAuthenticatedRequest(config, success, failure)`. There are a few helper functions included for posting/getting nodes, getting views, uploading files, etc. But they typically all construct a call to `makeAuthenticatedRequest`. This function should facilitate most things that people want to do with Drupal in a mobile environment. It's also easy to use `makeAuthenticatedRequest' to make requests agaist custom Services.
 
 
 # Jasmine
 
-The included spec is intended to be run with [TiShadow](https://github.com/dbankier/TiShadow) and Jasmine. To make it work, copy the spec into your project's root spec/ folder. Edit `drupal_spec.js` to point to the `drupal` module location and the absolute url your server and api endpoint.
+The included spec is intended to be run with [TiShadow](https://github.com/dbankier/TiShadow) + [Jasmine](http://pivotal.github.io/jasmine/). To make it work, copy the spec into your project's root spec/ folder. Edit `drupal_spec.js` to point to the `drupal` module location and the absolute url your server and api endpoint.
 
