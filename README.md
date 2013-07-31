@@ -23,7 +23,7 @@ drupal.systemConnect(
 	//success
 	function(sessionData) {
 		var uid = sessionData.user.uid;
-		Ti.API.info('logged in as user '+uid);
+		Ti.API.info('session found for user '+uid);
 	},
 	//failure
 	function(error) {
