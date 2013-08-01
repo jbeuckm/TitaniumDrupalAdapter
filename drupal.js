@@ -1,13 +1,34 @@
+/**
+ * @module drupal
+ *
+ * Yet another Drupal adapter for Titanium. 
+ * This dependency-free module is adapted to the new CSRF token requirement in Services 3.4.
+ * 
+ * Run the included Jasmine spec with TiShadow.
+ * 
+ * by Joe Beuckman 2013
+ * Github project link: https://github.com/jbeuckm/TitaniumDrupalAdapter
+ */
+
+
 var REST_PATH;
 var SITE_ROOT;
 var SERVICE_ENDPOINT;
 
+
+/**
+ * Prepare to connect to a Drupal server and Services 3.4 module.
+ */
 function setRestPath(root, endpoint) {
 	SITE_ROOT = root;
 	SERVICE_ENDPOINT = endpoint;
 	REST_PATH = root + endpoint + '/';
 }
 
+
+/**
+ * Retrieve the new Services security token identifying this session with this device.
+ */
 function getCsrfToken(success, failure) {
 
 	// use previously loaded token
@@ -33,6 +54,10 @@ function getCsrfToken(success, failure) {
 
 var connectObject;
 
+
+/**
+ * Establish a session (or return the stored session).
+ */
 function systemConnect(success, failure) {
 
     var cookie = Ti.App.Properties.getString("Drupal-Cookie");
@@ -80,6 +105,19 @@ function systemConnect(success, failure) {
 }
 
 
+/**
+ * Construct and fire arbitrary requests to the connected Drupal server.
+ * @TODO: encode and append url params here for GET requests.
+ * Config properties:
+ * 
+ * 		httpCommand: GET, POST, PUT, DELETE, etc.
+ * 
+ * 		servicePath: Path to the resource including any url parameters like resource id.
+ * 
+ * 		contentType: String to send as "Content-Type" HTTP header
+ * 
+ * 		trace (boolean): If true, echo the request summary with Ti.API.trace()
+ */
 function makeAuthenticatedRequest(config, success, failure) {
 	
 	var trace = "makeAuthenticatedRequest()\n";
@@ -99,7 +137,7 @@ function makeAuthenticatedRequest(config, success, failure) {
     xhr.onerror = function(e) {
         Ti.API.error(JSON.stringify(e));
 
-		Ti.API.error('HERE WAS THE FAILED REQUEST:');
+		Ti.API.error('FAILED REQUEST:');
 		Ti.API.error(trace);
 
         failure(e);
@@ -144,54 +182,46 @@ function makeAuthenticatedRequest(config, success, failure) {
 }
 
 
+/**
+ * Attempt to register a new account. user object must include name, pass, mail properties.
+ */
 function createAccount(user, success, failure) {
 
-	getCsrfToken(
-	    // success getting token
-	    function(token) {
-    
-    		systemConnect(
-    			function(responseData){
-    				registerNewUser(user, success, failure);
-    			},
-    			function(e){
-    				Ti.API.error(e);
-    				failure(e);
-    			}
-    		);
-    
-    	},
-    	// failed to get token
-    	function(err){
-    		failure(err);
-    	}
-	);
-}
-
-function registerNewUser(user, success, failure) {
-Ti.API.info('will now register user '+JSON.stringify(user));	
-	makeAuthenticatedRequest({
-			httpCommand : 'POST',
-			servicePath : 'user/register',
-			contentType: 'application/json',
-			params: JSON.stringify(user),
-			timeout: 250000
-		}, 
-		//success
+	systemConnect(
+		
 		function(responseData){
-			Ti.API.info('registerNewUser SUCCESS');
-			success(responseData);
+			Ti.API.info('Registering new user: '+JSON.stringify(user));	
+		
+			makeAuthenticatedRequest({
+					httpCommand : 'POST',
+					servicePath : 'user/register',
+					contentType: 'application/json',
+					params: JSON.stringify(user)
+				}, 
+				//success
+				function(responseData){
+					Ti.API.info('registerNewUser SUCCESS');
+					success(responseData);
+				},
+				//fail
+				function(err){
+					Ti.API.error('registerNewUser FAIL');
+					failure(err);
+				}
+			);
 		},
-		//fail
-		function(err){
-			Ti.API.error('registerNewUser FAIL');
-			failure(err);
+		function(e){
+			Ti.API.error(e);
+			failure(e);
 		}
-	);
 
+	);
 }
 
 
+/**
+ * Construct and send the proper login request.
+ */
 function login(username, password, success, failure) {
 
 	var user = {
@@ -201,10 +231,10 @@ function login(username, password, success, failure) {
 
 	systemConnect(function(resp){
 		
-		Ti.API.trace('login got this from systemConnect: '+JSON.stringify(resp));
+		Ti.API.trace('systemConnect response: '+JSON.stringify(resp));
 		
 		if (resp.user.uid != 0) {
-			Ti.API.debug('already logged in - returning systemConnect session');
+			Ti.API.debug('already logged in - returning systemConnect session\'s user');
 			success(resp.user);
 		}
 		else {
@@ -230,6 +260,10 @@ function login(username, password, success, failure) {
 
 };
 
+
+/**
+ * Become user:uid=0
+ */
 function logout(success, failure) {
 
 	makeAuthenticatedRequest({
@@ -245,6 +279,9 @@ function logout(success, failure) {
 }
 
 
+/**
+ * Requires Services Views module
+ */
 function getView(viewName, args, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : "views/" + viewName + ".json?" + encodeUrlString(args),
@@ -253,6 +290,9 @@ function getView(viewName, args, success, failure) {
 	}, success, failure);
 }
 
+/**
+ * Convenience function for GET requests
+ */
 function getResource(resourceName, args, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
@@ -260,6 +300,9 @@ function getResource(resourceName, args, success, failure) {
 	}, success, failure);
 }
 
+/**
+ * Convenience function for POST requests
+ */
 function postResource(resourceName, args, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
@@ -268,6 +311,9 @@ function postResource(resourceName, args, success, failure) {
 	}, success, failure);
 }
 
+/**
+ * Convenience function for PUT requests
+ */
 function putResource(resourceName, object, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
@@ -277,23 +323,30 @@ function putResource(resourceName, object, success, failure) {
 	}, success, failure);
 }
 
+/**
+ * The fundamental act of Drupal
+ */
 function createNode(node, success, failure) {
 
 	makeAuthenticatedRequest({
-		servicePath : "node",
-		httpCommand : "POST",
-
-		params : JSON.stringify({
-			node : node
-		})
-	}, function(response) {
-		Ti.API.trace(JSON.stringify(response));
-		success(response);
-	}, function(response) {
-		failure(response);
-	});
+			servicePath : "node",
+			httpCommand : "POST",
+	
+			params : JSON.stringify({
+				node : node
+			})
+		}, function(response) {
+			Ti.API.trace(JSON.stringify(response));
+			success(response);
+		}, function(response) {
+			failure(response);
+		}
+	);
 }
 
+/**
+ * Haven't tested this in a while but it was working in Services 3.2...
+ */
 function uploadFile(base64data, filename, filesize, success, failure) {
 
 	var fileDescription = {
@@ -333,7 +386,9 @@ function serializeDrupalViewsFilter(obj) {
 	return str.join("&");
 }
 
-
+/**
+ * Create a request string from an object of request parameters.
+ */
 function encodeUrlString(args) {
 	var parts = [];
 	for (var i in args) {
@@ -344,8 +399,9 @@ function encodeUrlString(args) {
 	return url;
 }
 
-/*
- * Create the basic field structure for uploading a node field
+/**
+ * Create the basic field structure for uploading a node field.
+ * This function is mainly here to document the "unique" way that field data must be constructed to work with Services.
  */
 function basicField(obj) {
 	return {
