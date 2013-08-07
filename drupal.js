@@ -112,7 +112,9 @@ function systemConnect(success, failure) {
  * 
  * 		httpCommand: GET, POST, PUT, DELETE, etc.
  * 
- * 		servicePath: Path to the resource including any url parameters like resource id.
+ * 		params: An object to be sent to the server
+ * 
+ * 		servicePath: Path to the resource including any url parameters like resource id
  * 
  * 		contentType: String to send as "Content-Type" HTTP header
  * 
@@ -268,7 +270,7 @@ function logout(success, failure) {
 
 	makeAuthenticatedRequest({
 		httpCommand : 'POST',
-		servicePath : 'user/logout'
+		servicePath : 'user/logout.json'
 	}, function() {
 
         Ti.App.Properties.removeProperty("Drupal-Cookie");
@@ -410,15 +412,16 @@ function basicField(obj) {
 }
 
 
-exports = {
-	systemConnect: systemConnect,
-	setRestPath : setRestPath,
-	createAccount : createAccount,
-	login : login,
-	getResource : getResource,
-	serializeDrupalViewsFilter: serializeDrupalViewsFilter,
-	makeAuthenticatedRequest : makeAuthenticatedRequest,
-	putResource: putResource,
-	getView : getView,
-	logout : logout
-};
+exports.setRestPath = setRestPath;
+
+exports.systemConnect = systemConnect;
+exports.makeAuthenticatedRequest  = makeAuthenticatedRequest;
+exports.createAccount  = createAccount;
+exports.login  = login;
+exports.logout  = logout;
+
+exports.getResource  = getResource;
+exports.serializeDrupalViewsFilter = serializeDrupalViewsFilter;
+exports.putResource = putResource;
+exports.getView  = getView;
+
