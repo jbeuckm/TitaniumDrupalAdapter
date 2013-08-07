@@ -305,11 +305,11 @@ function getResource(resourceName, args, success, failure) {
 /**
  * Convenience function for POST requests
  */
-function postResource(resourceName, args, success, failure) {
+function postResource(resourceName, object, success, failure) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
 		httpCommand : 'POST',
-		params : args
+		params : JSON.stringify(object)
 	}, success, failure);
 }
 
@@ -321,7 +321,7 @@ function putResource(resourceName, object, success, failure) {
 		servicePath : resourceName,
 		httpCommand : 'PUT',
 		contentType: 'application/json',
-		params : object
+		params : JSON.stringify(object)
 	}, success, failure);
 }
 
