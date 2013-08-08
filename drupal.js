@@ -296,10 +296,29 @@ function getView(viewName, args, success, failure) {
  * Convenience function for GET requests
  */
 function getResource(resourceName, args, success, failure) {
+
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
 		httpCommand : 'GET'
 	}, success, failure);
+
+/*
+	var xhr = Ti.Network.createHTTPClient();
+	var requestURL = REST_PATH + resourceName + ".json?" + encodeUrlString(args);
+
+	xhr.onload = function() {
+		var data = JSON.parse(xhr.responseText);
+		success(data);
+	};
+	xhr.onerror = function(err) {
+		Ti.API.error('failed to get '+requestURL);
+		Ti.API.error('response = '+xhr.responseText);
+		failure(err);
+	}
+	
+	xhr.open('GET', requestURL);
+	xhr.send();
+*/
 }
 
 /**

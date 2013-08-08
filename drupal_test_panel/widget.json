@@ -1,0 +1,13 @@
+{
+	"id": "drupal_test_panel",
+	"name": "Drupal Test Panel",
+	"description" : "use this widget to interact with Drupal Services",
+	"author": "Joe Beuckman",
+	"version": "1.0",
+	"copyright":"no",
+	"license":"Public Domain",
+	"min-alloy-version": "1.0",
+	"min-titanium-version":"2.1",
+	"tags":"",
+	"platforms":"android,ios"
+}
