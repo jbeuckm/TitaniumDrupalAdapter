@@ -52,20 +52,18 @@ function getCsrfToken(success, failure) {
 }
 
 
-var connectObject;
-
 
 /**
  * Establish a session (or return the stored session).
  */
 function systemConnect(success, failure) {
-
+/*
     var cookie = Ti.App.Properties.getString("Drupal-Cookie");
     if (cookie) {
-        success(connectObject);
+        success(Ti.App.Properties.getObject('connectedSession'));
         return;
     }
-    
+*/
     getCsrfToken(function(){
 
 		var url = REST_PATH + 'system/connect.json';
@@ -81,7 +79,7 @@ function systemConnect(success, failure) {
 				var response = xhr.responseText;
 				var responseData = JSON.parse(response);
 	
-	            connectObject = responseData;
+//				Ti.App.Properties.setObject('connectedSession', responseData);
 	            
 	            var cookie = responseData.session_name+'='+responseData.sessid;
 	            Ti.App.Properties.setString("Drupal-Cookie", cookie);
@@ -296,29 +294,10 @@ function getView(viewName, args, success, failure) {
  * Convenience function for GET requests
  */
 function getResource(resourceName, args, success, failure) {
-
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
 		httpCommand : 'GET'
 	}, success, failure);
-
-/*
-	var xhr = Ti.Network.createHTTPClient();
-	var requestURL = REST_PATH + resourceName + ".json?" + encodeUrlString(args);
-
-	xhr.onload = function() {
-		var data = JSON.parse(xhr.responseText);
-		success(data);
-	};
-	xhr.onerror = function(err) {
-		Ti.API.error('failed to get '+requestURL);
-		Ti.API.error('response = '+xhr.responseText);
-		failure(err);
-	}
-	
-	xhr.open('GET', requestURL);
-	xhr.send();
-*/
 }
 
 /**
