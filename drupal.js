@@ -29,7 +29,7 @@ function setRestPath(root, endpoint) {
 /**
  * Retrieve the new Services security token identifying this session with this device.
  */
-function getCsrfToken(success, failure) {
+function getCsrfToken(success, failure, headers) {
 
 	// use previously loaded token
 	if (Ti.App.Properties.getString("X-CSRF-Token")) {
@@ -56,7 +56,7 @@ function getCsrfToken(success, failure) {
 /**
  * Establish a session (or return the stored session).
  */
-function systemConnect(success, failure) {
+function systemConnect(success, failure, headers) {
 /*
     var cookie = Ti.App.Properties.getString("Drupal-Cookie");
     if (cookie) {
@@ -118,7 +118,7 @@ function systemConnect(success, failure) {
  * 
  * 		trace (boolean): If true, echo the request summary with Ti.API.trace()
  */
-function makeAuthenticatedRequest(config, success, failure) {
+function makeAuthenticatedRequest(config, success, failure, headers) {
 	
 	var trace = "makeAuthenticatedRequest()\n";
 
@@ -171,6 +171,13 @@ function makeAuthenticatedRequest(config, success, failure) {
         xhr.setRequestHeader("Content-Type", config.contentType);
         trace += "Content-Type: " + config.contentType+"\n";
     }
+    
+    // add optional headers
+    if (headers) {
+    	for (var key in headers) {
+		    xhr.setRequestHeader(key, headers[key]);
+    	}
+    }
 
 	// optionally output a summary of the request
 	if (config.trace) {
@@ -185,7 +192,7 @@ function makeAuthenticatedRequest(config, success, failure) {
 /**
  * Attempt to register a new account. user object must include name, pass, mail properties.
  */
-function createAccount(user, success, failure) {
+function createAccount(user, success, failure, headers) {
 
 	systemConnect(
 		
@@ -207,7 +214,8 @@ function createAccount(user, success, failure) {
 				function(err){
 					Ti.API.error('registerNewUser FAIL');
 					failure(err);
-				}
+				},
+				headers
 			);
 		},
 		function(e){
@@ -222,7 +230,7 @@ function createAccount(user, success, failure) {
 /**
  * Construct and send the proper login request.
  */
-function login(username, password, success, failure) {
+function login(username, password, success, failure, headers) {
 
 	var user = {
 		username : username,
@@ -253,10 +261,10 @@ function login(username, password, success, failure) {
 
 					success(responseData.user);
 				},
-				failure);
+				failure, headers);
 		}
 	
-	}, failure);
+	}, failure, headers);
 
 };
 
@@ -264,7 +272,7 @@ function login(username, password, success, failure) {
 /**
  * Become user:uid=0
  */
-function logout(success, failure) {
+function logout(success, failure, headers) {
 
 	makeAuthenticatedRequest({
 		httpCommand : 'POST',
@@ -274,7 +282,7 @@ function logout(success, failure) {
         Ti.App.Properties.removeProperty("Drupal-Cookie");
 
 		success();
-	}, failure);
+	}, failure, headers);
 
 }
 
@@ -282,51 +290,51 @@ function logout(success, failure) {
 /**
  * Requires Services Views module
  */
-function getView(viewName, args, success, failure) {
+function getView(viewName, args, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : "views/" + viewName + ".json?" + encodeUrlString(args),
 		httpCommand : 'GET',
 		contentType : "application/json",
-	}, success, failure);
+	}, success, failure, headers);
 }
 
 /**
  * Convenience function for GET requests
  */
-function getResource(resourceName, args, success, failure) {
+function getResource(resourceName, args, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
 		httpCommand : 'GET'
-	}, success, failure);
+	}, success, failure, headers);
 }
 
 /**
  * Convenience function for POST requests
  */
-function postResource(resourceName, object, success, failure) {
+function postResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
 		httpCommand : 'POST',
 		params : JSON.stringify(object)
-	}, success, failure);
+	}, success, failure, headers);
 }
 
 /**
  * Convenience function for PUT requests
  */
-function putResource(resourceName, object, success, failure) {
+function putResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName,
 		httpCommand : 'PUT',
 		contentType: 'application/json',
 		params : JSON.stringify(object)
-	}, success, failure);
+	}, success, failure, headers);
 }
 
 /**
  * The fundamental act of Drupal
  */
-function createNode(node, success, failure) {
+function createNode(node, success, failure, headers) {
 
 	makeAuthenticatedRequest({
 			servicePath : "node",
@@ -340,14 +348,15 @@ function createNode(node, success, failure) {
 			success(response);
 		}, function(response) {
 			failure(response);
-		}
+		}, 
+		headers
 	);
 }
 
 /**
  * Haven't tested this in a while but it was working in Services 3.2...
  */
-function uploadFile(base64data, filename, filesize, success, failure) {
+function uploadFile(base64data, filename, filesize, success, failure, headers) {
 
 	var fileDescription = {
 		file : base64data,
@@ -360,7 +369,7 @@ function uploadFile(base64data, filename, filesize, success, failure) {
 		httpCommand : "POST",
 		contentType : "application/x-www-form-urlencoded; charset=utf-8",
 		params : fileDescription
-	}, success, failure);
+	}, success, failure, headers);
 }
 
 
