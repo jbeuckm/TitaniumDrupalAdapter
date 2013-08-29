@@ -42,7 +42,7 @@ describe("Drupal Tests", function() {
                     uid = responseData.user.uid;
                     Ti.API.debug('system.connect gives user ' + uid);
                     connected = true;
-                }, function(responseData) {
+                }, function(error) {
                     connected = false;
                 });
             });

@@ -57,13 +57,7 @@ function getCsrfToken(success, failure, headers) {
  * Establish a session (or return the stored session).
  */
 function systemConnect(success, failure, headers) {
-/*
-    var cookie = Ti.App.Properties.getString("Drupal-Cookie");
-    if (cookie) {
-        success(Ti.App.Properties.getObject('connectedSession'));
-        return;
-    }
-*/
+
     getCsrfToken(function(){
 
 		var url = REST_PATH + 'system/connect.json';
@@ -78,8 +72,8 @@ function systemConnect(success, failure, headers) {
 			if (xhr.status == 200) {
 				var response = xhr.responseText;
 				var responseData = JSON.parse(response);
-	
-//				Ti.App.Properties.setObject('connectedSession', responseData);
+	            
+	            Ti.API.debug("got system.connect session "+responseData.sessid);
 	            
 	            var cookie = responseData.session_name+'='+responseData.sessid;
 	            Ti.App.Properties.setString("Drupal-Cookie", cookie);
@@ -92,10 +86,13 @@ function systemConnect(success, failure, headers) {
 		};
 		xhr.onerror = function(e) {
 			Ti.API.error("There was an error: " + e.error);
+
+			// since systemConnect failed, we probably need a new csrf
+			Ti.App.Properties.setString("X-CSRF-Token", null);
+
 			failure(e);
 		};
 		xhr.send();
-	
 	},
 	function(err){
 	    failure(err);
@@ -164,9 +161,8 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
         xhr.setRequestHeader("X-CSRF-Token", token);
         trace += "X-CSRF-Token: " + token + "\n";
     }
-    
-    xhr.setRequestHeader("Accept", "application/json");
-	trace += "Accept: application/json\n"
+
+
     if (config.contentType) {
         xhr.setRequestHeader("Content-Type", config.contentType);
         trace += "Content-Type: " + config.contentType+"\n";
@@ -194,35 +190,25 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
  */
 function createAccount(user, success, failure, headers) {
 
-	systemConnect(
-		
-		function(responseData){
-			Ti.API.info('Registering new user: '+JSON.stringify(user));	
-		
-			makeAuthenticatedRequest({
-					httpCommand : 'POST',
-					servicePath : 'user/register',
-					contentType: 'application/json',
-					params: JSON.stringify(user)
-				}, 
-				//success
-				function(responseData){
-					Ti.API.info('registerNewUser SUCCESS');
-					success(responseData);
-				},
-				//fail
-				function(err){
-					Ti.API.error('registerNewUser FAIL');
-					failure(err);
-				},
-				headers
-			);
-		},
-		function(e){
-			Ti.API.error(e);
-			failure(e);
-		}
+	Ti.API.info('Registering new user: '+JSON.stringify(user)+" with cookie "+Ti.App.Properties.getString("Drupal-Cookie"));	
 
+	makeAuthenticatedRequest({
+			httpCommand : 'POST',
+			servicePath : 'user/register',
+			contentType: 'application/json',
+			params: JSON.stringify(user)
+		}, 
+		//success
+		function(responseData){
+			Ti.API.info('registerNewUser SUCCESS');
+			success(responseData);
+		},
+		//fail
+		function(err){
+			Ti.API.error('registerNewUser FAIL');
+			failure(err);
+		},
+		headers
 	);
 }
 
@@ -419,6 +405,7 @@ function basicField(obj) {
 }
 
 
+
 exports.setRestPath = setRestPath;
 
 exports.systemConnect = systemConnect;
@@ -428,6 +415,7 @@ exports.login  = login;
 exports.logout  = logout;
 
 exports.getResource  = getResource;
+exports.basicField = basicField;
 exports.serializeDrupalViewsFilter = serializeDrupalViewsFilter;
 exports.putResource = putResource;
 exports.getView  = getView;
