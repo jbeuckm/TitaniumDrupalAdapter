@@ -73,7 +73,8 @@ function systemConnect(success, failure, headers) {
 				var response = xhr.responseText;
 				var responseData = JSON.parse(response);
 	            
-	            Ti.API.debug("got system.connect session "+responseData.sessid);
+	            Ti.API.debug("system.connect session "+responseData.sessid);
+                Ti.API.debug('system.connect user '+responseData.user.uid);
 	            
 	            var cookie = responseData.session_name+'='+responseData.sessid;
 	            Ti.App.Properties.setString("Drupal-Cookie", cookie);
@@ -163,6 +164,8 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
     }
 
 
+    xhr.setRequestHeader("Accept", "application/json");
+
     if (config.contentType) {
         xhr.setRequestHeader("Content-Type", config.contentType);
         trace += "Content-Type: " + config.contentType+"\n";
@@ -194,7 +197,7 @@ function createAccount(user, success, failure, headers) {
 
 	makeAuthenticatedRequest({
 			httpCommand : 'POST',
-			servicePath : 'user/register',
+			servicePath : 'user/register.json',
 			contentType: 'application/json',
 			params: JSON.stringify(user)
 		}, 
@@ -235,7 +238,7 @@ function login(username, password, success, failure, headers) {
 			Ti.API.debug('user is anonymous - logging in with new session');
 			makeAuthenticatedRequest({
 					httpCommand : 'POST',
-					servicePath : 'user/login',
+					servicePath : 'user/login.json',
 		            contentType: "application/json",
 					params: JSON.stringify(user)
 				},
@@ -243,7 +246,7 @@ function login(username, password, success, failure, headers) {
 
 		            var cookie = responseData.session_name+'='+responseData.sessid;
 		            Ti.App.Properties.setString("Drupal-Cookie", cookie);
-		            Ti.API.trace('login saving new cookie '+cookie);
+		            Ti.API.debug('login saving new cookie '+cookie);
 
 					success(responseData.user);
 				},
@@ -265,7 +268,7 @@ function logout(success, failure, headers) {
 		servicePath : 'user/logout.json'
 	}, function() {
 
-        Ti.App.Properties.removeProperty("Drupal-Cookie");
+//        Ti.App.Properties.removeProperty("Drupal-Cookie");
 
 		success();
 	}, failure, headers);
@@ -299,7 +302,7 @@ function getResource(resourceName, args, success, failure, headers) {
  */
 function postResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
-		servicePath : resourceName,
+		servicePath : resourceName + ".json",
 		httpCommand : 'POST',
 		params : JSON.stringify(object)
 	}, success, failure, headers);
@@ -310,7 +313,7 @@ function postResource(resourceName, object, success, failure, headers) {
  */
 function putResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
-		servicePath : resourceName,
+		servicePath : resourceName + ".json",
 		httpCommand : 'PUT',
 		contentType: 'application/json',
 		params : JSON.stringify(object)
@@ -409,14 +412,17 @@ function basicField(obj) {
 exports.setRestPath = setRestPath;
 
 exports.systemConnect = systemConnect;
-exports.makeAuthenticatedRequest  = makeAuthenticatedRequest;
-exports.createAccount  = createAccount;
-exports.login  = login;
-exports.logout  = logout;
+exports.makeAuthenticatedRequest = makeAuthenticatedRequest;
+exports.createAccount = createAccount;
+exports.login = login;
+exports.logout = logout;
 
-exports.getResource  = getResource;
 exports.basicField = basicField;
 exports.serializeDrupalViewsFilter = serializeDrupalViewsFilter;
+
+exports.getResource = getResource;
+exports.postResource = postResource;
 exports.putResource = putResource;
-exports.getView  = getView;
+
+exports.getView = getView;
 
