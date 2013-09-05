@@ -27,7 +27,7 @@
 	textAlign: 'center'
 }
 
-'Button': {
+Button: {
 	height: 28,
 	color: '#fff',
 	backgroundColor: '#27b',

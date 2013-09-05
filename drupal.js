@@ -106,7 +106,7 @@ function systemConnect(success, failure, headers) {
  * @TODO: encode and append url params here for GET requests.
  * Config properties:
  * 
- * 		httpCommand: GET, POST, PUT, DELETE, etc.
+ * 		httpMethod: GET, POST, PUT, DELETE, etc.
  * 
  * 		params: An object to be sent to the server
  * 
@@ -123,14 +123,14 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
     var url = REST_PATH + config.servicePath;
 
     var xhr = Titanium.Network.createHTTPClient();
-	trace += config.httpCommand+' '+url+"\n";
+	trace += config.httpMethod+' '+url+"\n";
     
 	// optionally override timeout
 	if (config.timeout) {
 		xhr.timeout = config.timeout;
 	}
 
-    xhr.open(config.httpCommand, url);
+    xhr.open(config.httpMethod, url);
 
     xhr.onerror = function(e) {
         Ti.API.error(JSON.stringify(e));
@@ -153,9 +153,11 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
     };
 
 
-	var cookie = Ti.App.Properties.getString("Drupal-Cookie");
-    xhr.setRequestHeader("Cookie", cookie);
-    trace += "Cookie: " + cookie + "\n";
+	if (!config.skipCookie) {
+		var cookie = Ti.App.Properties.getString("Drupal-Cookie");
+	    xhr.setRequestHeader("Cookie", cookie);
+	    trace += "Cookie: " + cookie + "\n";
+	}
 
     if (!config.skipCsrfToken) {
     	var token = Ti.App.Properties.getString("X-CSRF-Token");
@@ -196,7 +198,7 @@ function createAccount(user, success, failure, headers) {
 	Ti.API.info('Registering new user: '+JSON.stringify(user)+" with cookie "+Ti.App.Properties.getString("Drupal-Cookie"));	
 
 	makeAuthenticatedRequest({
-			httpCommand : 'POST',
+			httpMethod : 'POST',
 			servicePath : 'user/register.json',
 			contentType: 'application/json',
 			params: JSON.stringify(user)
@@ -237,7 +239,7 @@ function login(username, password, success, failure, headers) {
 		else {
 			Ti.API.debug('user is anonymous - logging in with new session');
 			makeAuthenticatedRequest({
-					httpCommand : 'POST',
+					httpMethod : 'POST',
 					servicePath : 'user/login.json',
 		            contentType: "application/json",
 					params: JSON.stringify(user)
@@ -264,7 +266,7 @@ function login(username, password, success, failure, headers) {
 function logout(success, failure, headers) {
 
 	makeAuthenticatedRequest({
-		httpCommand : 'POST',
+		httpMethod : 'POST',
 		servicePath : 'user/logout.json'
 	}, function() {
 
@@ -282,7 +284,7 @@ function logout(success, failure, headers) {
 function getView(viewName, args, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : "views/" + viewName + ".json?" + encodeUrlString(args),
-		httpCommand : 'GET',
+		httpMethod : 'GET',
 		contentType : "application/json",
 	}, success, failure, headers);
 }
@@ -293,7 +295,7 @@ function getView(viewName, args, success, failure, headers) {
 function getResource(resourceName, args, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json?" + encodeUrlString(args),
-		httpCommand : 'GET'
+		httpMethod : 'GET'
 	}, success, failure, headers);
 }
 
@@ -303,7 +305,7 @@ function getResource(resourceName, args, success, failure, headers) {
 function postResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json",
-		httpCommand : 'POST',
+		httpMethod : 'POST',
 		params : JSON.stringify(object)
 	}, success, failure, headers);
 }
@@ -314,7 +316,7 @@ function postResource(resourceName, object, success, failure, headers) {
 function putResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json",
-		httpCommand : 'PUT',
+		httpMethod : 'PUT',
 		contentType: 'application/json',
 		params : JSON.stringify(object)
 	}, success, failure, headers);
@@ -327,7 +329,7 @@ function createNode(node, success, failure, headers) {
 
 	makeAuthenticatedRequest({
 			servicePath : "node",
-			httpCommand : "POST",
+			httpMethod : "POST",
 	
 			params : JSON.stringify({
 				node : node
@@ -355,7 +357,7 @@ function uploadFile(base64data, filename, filesize, success, failure, headers) {
 
 	makeAuthenticatedRequest({
 		servicePath : "file.json",
-		httpCommand : "POST",
+		httpMethod : "POST",
 		contentType : "application/x-www-form-urlencoded; charset=utf-8",
 		params : fileDescription
 	}, success, failure, headers);
