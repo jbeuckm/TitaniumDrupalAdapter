@@ -399,8 +399,9 @@ function encodeUrlString(args) {
 	return url;
 }
 
+
 /**
- * Create the basic field structure for uploading a node field.
+ * Create the basic field structure for uploading a field.
  * This function is mainly here to document the "unique" way that field data must be constructed to work with Services.
  */
 function basicField(obj) {
