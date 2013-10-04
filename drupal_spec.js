@@ -4,19 +4,6 @@ describe("Drupal Tests", function() {
     drupal.setRestPath('http://localhost:8888/servicestest/', 'api');
 
 
-	describe("deals with Drupal data types", function(){
-		
-		it("serializes filter parameters for drupal", function(){
-			var params = {
-				'arg[]': [1,2,3]
-			};
-			var request = drupal.serializeDrupalViewsFilter(params);
-			
-			expect(decodeURIComponent(request)).toEqual('arg[]=1&arg[]=2&arg[]=3');
-		});
-
-	});
-
 	describe("can create account & login", function() {
 		
 		var username = 'drupalspec'+createRandomString(8);
@@ -37,9 +24,8 @@ describe("Drupal Tests", function() {
 				
 				drupal.systemConnect(
 					function(responseData) {
-
 						uid = responseData.user.uid;
-                        Ti.API.debug('system.connect gives user '+uid);
+						Ti.API.info("systemConnect got uid "+uid);
 						connected = true;
 					},
 					function(responseData) {
@@ -69,6 +55,7 @@ describe("Drupal Tests", function() {
 					);
 				}
 				else {
+					Ti.API.info("already logged out - proceeding...");
 					loggedout = true;
 				}
 			});
@@ -117,7 +104,7 @@ describe("Drupal Tests", function() {
 			runs(function() {
 				drupal.login(user.name, user.pass,
 					function(data) {
-					    Ti.API.info('spec login succeeded with '+data);
+					    Ti.API.info('spec login succeeded with uid '+data.uid);
 					    uid = data.uid;
 						loggedin = true;
 					},
@@ -209,6 +196,20 @@ describe("Drupal Tests", function() {
 
 	});
 	
+
+	describe("deals with Drupal data types", function(){
+		
+		it("serializes filter parameters for drupal", function(){
+			var params = {
+				'arg[]': [1,2,3]
+			};
+			var request = drupal.serializeDrupalViewsFilter(params);
+			
+			expect(decodeURIComponent(request)).toEqual('arg[]=1&arg[]=2&arg[]=3');
+		});
+
+	});
+
 }); 
 
 function createRandomString(max) {

@@ -11,9 +11,10 @@
  */
 
 
-var REST_PATH;
 var SITE_ROOT;
 var SERVICE_ENDPOINT;
+
+var REST_PATH;
 
 
 /**
