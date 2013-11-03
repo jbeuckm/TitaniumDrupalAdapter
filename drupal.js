@@ -10,21 +10,10 @@
  * Github project link: https://github.com/jbeuckm/TitaniumDrupalAdapter
  */
 
+Ti.include("drupal/config.js");
 
-var SITE_ROOT;
-var SERVICE_ENDPOINT;
+var REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
 
-var REST_PATH;
-
-
-/**
- * Prepare to connect to a Drupal server and Services 3.4 module.
- */
-function setRestPath(root, endpoint) {
-	SITE_ROOT = root;
-	SERVICE_ENDPOINT = endpoint;
-	REST_PATH = root + endpoint + '/';
-}
 
 
 /**
@@ -59,16 +48,16 @@ function getCsrfToken(success, failure, headers) {
  */
 function systemConnect(success, failure, headers) {
 
-    getCsrfToken(function(){
+    getCsrfToken(function(token){
 
 		var url = REST_PATH + 'system/connect.json';
 		var xhr = Ti.Network.createHTTPClient();
 		xhr.open("POST", url);
 	
 		xhr.setRequestHeader('Content-Type', 'application/json');
-		xhr.setRequestHeader("X-CSRF-Token", Ti.App.Properties.getString("X-CSRF-Token"));
+		xhr.setRequestHeader("X-CSRF-Token", token);
 	
-		xhr.onload = function() {
+		xhr.onload = function(e) {
 	
 			if (xhr.status == 200) {
 				var response = xhr.responseText;
@@ -87,7 +76,8 @@ function systemConnect(success, failure, headers) {
 			}
 		};
 		xhr.onerror = function(e) {
-			Ti.API.error("There was an error: " + e.error);
+            Ti.API.error("There was an error calling systemConnect: ");
+            Ti.API.error(e);
 
 			// since systemConnect failed, we probably need a new csrf
 			Ti.App.Properties.setString("X-CSRF-Token", null);
@@ -138,6 +128,7 @@ function makeAuthenticatedRequest(config, success, failure, headers) {
 
 		Ti.API.error('FAILED REQUEST:');
 		Ti.API.error(trace);
+		Ti.API.error(config.params);
 
         failure(e);
     };
@@ -318,7 +309,7 @@ function putResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json",
 		httpMethod : 'PUT',
-		contentType: 'application/json',
+//		contentType: 'application/json',
 		params : JSON.stringify(object)
 	}, success, failure, headers);
 }
@@ -411,9 +402,6 @@ function basicField(obj) {
 	};
 }
 
-
-
-exports.setRestPath = setRestPath;
 
 exports.systemConnect = systemConnect;
 exports.makeAuthenticatedRequest = makeAuthenticatedRequest;
