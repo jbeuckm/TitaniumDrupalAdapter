@@ -11,10 +11,17 @@
  */
 
 Ti.include("drupal/config.js");
-
 var REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
 
 
+/**
+ * Prepare to connect to a (different) Drupal server and Services 3.4 module.
+ */
+function setRestPath(root, endpoint) {
+        SITE_ROOT = root;
+        SERVICES_ENDPOINT = endpoint;
+        REST_PATH = root + endpoint + '/';
+}
 
 /**
  * Retrieve the new Services security token identifying this session with this device.
@@ -51,11 +58,16 @@ function systemConnect(success, failure, headers) {
     getCsrfToken(function(token){
 
 		var url = REST_PATH + 'system/connect.json';
+        Ti.API.debug('POSTing to url '+url);
+
 		var xhr = Ti.Network.createHTTPClient();
 		xhr.open("POST", url);
 	
-		xhr.setRequestHeader('Content-Type', 'application/json');
-		xhr.setRequestHeader("X-CSRF-Token", token);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        Ti.API.debug('Content-Type: application/json');
+
+        xhr.setRequestHeader("X-CSRF-Token", token);
+        Ti.API.debug("X-CSRF-Token: " + token);
 	
 		xhr.onload = function(e) {
 	
