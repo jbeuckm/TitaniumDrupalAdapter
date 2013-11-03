@@ -8,17 +8,14 @@
 
 # Usage
 
-Create a Service and enable (at least) the Resources called "system" and "user". Call `setRestPath()` with the url of your Drupal install and your service endpoint.
-
-```javascript
-var drupal = require('drupal');
-
-drupal.setRestPath('http://myserver.com/drupal/', 'my_api_endpoint');
-```
+Create a Service and enable (at least) the Resources called "system" and "user". Rename `config.js.example' to `config.js` and enter the url of your Drupal install and your service endpoint.
 
 ### Get a session
 
 ```javascript
+
+var drupal = require('drupal');
+
 drupal.systemConnect(
 	//success
 	function(sessionData) {
