@@ -71,6 +71,7 @@ function systemConnect(success, failure) {
 		failure(e);
 	};
 
+    xhr.clearCookies(SITE_ROOT);
 	xhr.send();
 }
 
