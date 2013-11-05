@@ -8,7 +8,7 @@
 
 # Usage
 
-Create a Service and enable (at least) the Resources called "system" and "user". Rename `config.js.example' to `config.js` and enter the url of your Drupal install and your service endpoint.
+Create a Service and enable (at least) the Resources called "system" and "user". Rename `config.js.example` to `config.js` and enter the url of your Drupal install and your service endpoint.
 
 ### Get a session
 

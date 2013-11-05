@@ -242,6 +242,8 @@ describe("Drupal Tests", function() {
 
 
 
+
+
 function createRandomString(max) {
 
     if (max == null) max = 20;
