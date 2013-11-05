@@ -322,7 +322,7 @@ function putResource(resourceName, object, success, failure, headers) {
 	makeAuthenticatedRequest({
 		servicePath : resourceName + ".json",
 		httpMethod : 'PUT',
-//		contentType: 'application/json',
+		contentType: 'application/json',
 		params : JSON.stringify(object)
 	}, success, failure, headers);
 }
