@@ -13,55 +13,35 @@ describe("Drupal Tests", function() {
         };
         var uid = 0;
             
+        logoutIfNecessary();
 
-        it("calls system.connect", function() {
+
+        it("calls system/connect", function() {
             
             var connected = false;
+            var done = false;
             
             runs(function(){
                 
                 drupal.systemConnect(
                     function(responseData) {
                         uid = responseData.user.uid;
-                        Ti.API.info("systemConnect got uid "+uid);
+                        Ti.API.info("system/connect reported uid "+uid);
                         connected = true;
+                        done = true;
                     },
-                    function(responseData) {
+                    function(err) {
                         connected = false;
+                        done = true;
                     }
                 );
             });
                 
-            waitsFor(function(){ return connected; }, 'problem connecting', 5000);
+            waitsFor(function(){ return done; }, 'timeout connecting', 2500);
 
         });
-        
-        it("logs out if necessary", function() {
-            
-            var loggedout = false;
-            
-            runs(function() {
-                if (uid != 0) {
-                    Ti.API.info("logging out for user "+uid);
-                    drupal.logout(
-                        function(){
-                            loggedout = true;
-                        }, 
-                        function() {
-                            loggedout = false;
-                        }
-                    );
-                }
-                else {
-                    Ti.API.info("already logged out - proceeding...");
-                    loggedout = true;
-                }
-            });
-            
-            waitsFor(function(){ return loggedout; }, "could not log out", 5000);
-            
-        });
 
+        logoutIfNecessary();
 
         it("registers an account", function() {
 
@@ -85,7 +65,7 @@ describe("Drupal Tests", function() {
                 );
             });
             
-            waitsFor(function(){ return done; }, 'problem creating account', 5000);
+            waitsFor(function(){ return done; }, 'timeout creating account', 2500);
             
             runs(function(){
                 expect(error).toEqual('');
@@ -97,6 +77,7 @@ describe("Drupal Tests", function() {
         it("can log in", function() {
             
             var loggedin = false;
+            var done = false;
             
             // login as the previously created test user
             runs(function() {
@@ -105,15 +86,17 @@ describe("Drupal Tests", function() {
                         Ti.API.info('spec login succeeded with uid '+data.uid);
                         uid = data.uid;
                         loggedin = true;
+                        done = true;
                     },
                     function(err) {
                         Ti.API.error(err);
                         loggedin = false;
+                        done = true;
                     }
                 );
             });
 
-            waitsFor(function(){ return loggedin; }, 'logged in', 5000);
+            waitsFor(function(){ return done; }, 'timeout logging in', 2500);
             
         });
 
@@ -122,26 +105,30 @@ describe("Drupal Tests", function() {
         it("can load user entity", function() {
             
             var done = false;
+            var success = false;
             
             runs(function() {
                 drupal.getResource('user/'+uid, null, 
                     function(data) {
                         done = true;
+                        success = true;
                     },
                     function(err) {
                         Ti.API.error(err);
-                        done = false;
+                        done = true;
+                        success = false;
                     }
                 );
             });
 
-            waitsFor(function(){ return done; }, 'loaded my user', 5000);
+            waitsFor(function(){ return done; }, 'timeout loading my user', 2500);
         });
 
         
         
         xit("can create a node", function() {
             
+            var success = false;
             var done = false;
             
             var node = {
@@ -154,16 +141,18 @@ describe("Drupal Tests", function() {
                 drupal.postResource('node', node, 
                     function() {
                         Ti.API.info('POST succeeded');
+                        success = true;
                         done = true;
                     },
                     function(err) {
                         Ti.API.error(err);
-                        done = false;
+                        success = false;
+                        done = true;
                     }
                 );
             });
 
-            waitsFor(function(){ return done; }, 'posted a node', 5000);
+            waitsFor(function(){ return done; }, 'timeout posting a node', 2500);
         });
         
         
@@ -171,15 +160,18 @@ describe("Drupal Tests", function() {
         it("can log out", function() {
             
             var loggedout = false;
+            var done = false;
             
             runs(function() {
                 if (uid != 0) {
                     drupal.logout(
                         function(){
                             loggedout = true;
+                            done = true;
                         }, 
                         function() {
                             loggedout = false;
+                            done = true;
                         }
                     );
                 }
@@ -188,7 +180,7 @@ describe("Drupal Tests", function() {
                 }
             });
             
-            waitsFor(function(){ return loggedout; }, "could not log out", 5000);
+            waitsFor(function(){ return done; }, "timeout logging out", 2500);
             
         });
 
@@ -208,7 +200,47 @@ describe("Drupal Tests", function() {
 
     });
 
-}); 
+
+    function logoutIfNecessary() {
+        
+        var token = Ti.App.Properties.getString("X-CSRF-Token");
+        var cookie = Ti.App.Properties.getString("Drupal-Cookie");
+        if (token && cookie) {
+            
+            it("logs out if necessary", function() {
+                
+                var loggedout = false;
+                var done = false;
+                
+                runs(function() {
+        
+                    drupal.logout(
+                        function(){
+    Ti.App.Properties.setString("X-CSRF-Token", null);
+    Ti.App.Properties.setString("Drupal-Cookie", null);        
+                            loggedout = true;
+                            done = true;
+                        }, 
+                        function() {
+                            loggedout = false;
+                            done = true;
+                        }
+                    );
+                });
+                
+                waitsFor(function(){ return done; }, "timeout logging out", 2500);
+                
+            });
+
+        }
+
+    }
+
+
+});
+
+
+
 
 function createRandomString(max) {
 

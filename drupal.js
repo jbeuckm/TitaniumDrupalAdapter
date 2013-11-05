@@ -23,85 +23,90 @@ function setRestPath(root, endpoint) {
         REST_PATH = root + endpoint + '/';
 }
 
-/**
- * Retrieve the new Services security token identifying this session with this device.
- */
-function getCsrfToken(success, failure, headers) {
-
-	// use previously loaded token
-	if (Ti.App.Properties.getString("X-CSRF-Token")) {
-		success(Ti.App.Properties.getString("X-CSRF-Token"));
-		return;
-	}
-
-	var xhr = Ti.Network.createHTTPClient();
-	var tokenPath = SITE_ROOT + 'services/session/token';
-
-	xhr.onload = function() {
-		Ti.App.Properties.setString("X-CSRF-Token", xhr.responseText);
-		Ti.API.info('got CSRF token ' + xhr.responseText);
-		success(xhr.responseText);
-	};
-	xhr.onerror = failure;
-
-	xhr.open('GET', tokenPath);
-	xhr.send();
-}
-
 
 
 /**
  * Establish a session (or return the stored session).
  */
-function systemConnect(success, failure, headers) {
+function systemConnect(success, failure) {
 
-    getCsrfToken(function(token){
+	var url = REST_PATH + 'system/connect.json';
 
-		var url = REST_PATH + 'system/connect.json';
-        Ti.API.debug('POSTing to url '+url);
+	var xhr = Ti.Network.createHTTPClient();
 
-		var xhr = Ti.Network.createHTTPClient();
-		xhr.open("POST", url);
-	
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        Ti.API.debug('Content-Type: application/json');
+	xhr.onload = function(e) {
 
-        xhr.setRequestHeader("X-CSRF-Token", token);
-        Ti.API.debug("X-CSRF-Token: " + token);
-	
-		xhr.onload = function(e) {
-	
-			if (xhr.status == 200) {
-				var response = xhr.responseText;
-				var responseData = JSON.parse(response);
-	            
-	            Ti.API.debug("system.connect session "+responseData.sessid);
-                Ti.API.debug('system.connect user '+responseData.user.uid);
-	            
-	            var cookie = responseData.session_name+'='+responseData.sessid;
-	            Ti.App.Properties.setString("Drupal-Cookie", cookie);
-	
-				success(responseData);
-			}
-			else {
-			    failure(xhr.responseText);
-			}
-		};
-		xhr.onerror = function(e) {
-            Ti.API.error("There was an error calling systemConnect: ");
-            Ti.API.error(e);
+		if (xhr.status == 200) {
+			var response = xhr.responseText;
+			var responseData = JSON.parse(response);
+            
+            Ti.API.debug("system.connect session "+responseData.sessid);
+            Ti.API.debug('system.connect user '+responseData.user.uid);
+            
+            var cookie = responseData.session_name+'='+responseData.sessid;
+            Ti.App.Properties.setString("Drupal-Cookie", cookie);
 
-			// since systemConnect failed, we probably need a new csrf
-			Ti.App.Properties.setString("X-CSRF-Token", null);
+            getCsrfToken(function(token){
+                success(responseData);
+            },
+            function(err){
+                failure(err);
+            });
+		}
+		else {
+		    failure(xhr.responseText);
+		}
+	};
+	xhr.onerror = function(e) {
+        Ti.API.error("There was an error calling systemConnect: ");
+        Ti.API.error(e);
 
-			failure(e);
-		};
-		xhr.send();
-	},
-	function(err){
-	    failure(err);
-	});
+		// since systemConnect failed, we probably need a new csrf
+		Ti.App.Properties.setString("X-CSRF-Token", null);
+
+		failure(e);
+	};
+
+    Ti.API.debug("POSTing to url "+url);
+    xhr.open("POST", url);
+	xhr.send();
 }
+
+
+/**
+ * Retrieve the new Services security token identifying this session with this device.
+ */
+function getCsrfToken(success, failure) {
+    
+    var existingToken = Ti.App.Properties.getString("X-CSRF-Token");
+    if (existingToken) {
+        success(existingToken);
+        return;
+    }
+
+    var xhr = Ti.Network.createHTTPClient();
+
+    xhr.onload = function() {
+        Ti.App.Properties.setString("X-CSRF-Token", xhr.responseText);
+        Ti.API.info('got new CSRF token ' + xhr.responseText);
+        success(xhr.responseText);
+    };
+    xhr.onerror = function(err) {
+        Ti.API.error("error getting CSRF token:");
+        Ti.API.error(err);
+        
+        failure(err);
+    };
+
+    var tokenPath = SITE_ROOT + 'services/session/token';
+    xhr.open("GET", tokenPath);
+
+    var cookie = Ti.App.Properties.getString("Drupal-Cookie");
+    xhr.setRequestHeader("Cookie", cookie);
+
+    xhr.send();
+}
+
 
 
 /**
@@ -232,35 +237,29 @@ function login(username, password, success, failure, headers) {
 		password : password
 	};
 
-	systemConnect(function(resp){
-		
-		Ti.API.trace('systemConnect response: '+JSON.stringify(resp));
-		
-		if (resp.user.uid != 0) {
-			Ti.API.debug('already logged in - returning systemConnect session\'s user');
-			success(resp.user);
-		}
-		else {
-			Ti.API.debug('user is anonymous - logging in with new session');
-			makeAuthenticatedRequest({
-					httpMethod : 'POST',
-					servicePath : 'user/login.json',
-		            contentType: "application/json",
-					params: JSON.stringify(user)
-				},
-				function(responseData) {
 
-		            var cookie = responseData.session_name+'='+responseData.sessid;
-		            Ti.App.Properties.setString("Drupal-Cookie", cookie);
-		            Ti.API.debug('login saving new cookie '+cookie);
+	makeAuthenticatedRequest({
+			httpMethod : 'POST',
+			servicePath : 'user/login.json',
+            contentType: "application/json",
+			params: JSON.stringify(user)
+		},
+		function(responseData) {
 
-					success(responseData.user);
-				},
-				failure, headers);
-		}
-	
-	}, failure, headers);
+            var cookie = responseData.session_name+'='+responseData.sessid;
+            Ti.App.Properties.setString("Drupal-Cookie", cookie);
+            Ti.API.debug('login saving new cookie '+cookie);
 
+            // clear old token and get a new one for this session
+            Ti.App.Properties.setString("X-CSRF-Token", null);
+            getCsrfToken(function(token){
+                success(responseData.user);
+            },
+            function(err){
+                failure(err);
+            });
+		},
+		failure, headers);
 };
 
 
@@ -272,11 +271,10 @@ function logout(success, failure, headers) {
 	makeAuthenticatedRequest({
 		httpMethod : 'POST',
 		servicePath : 'user/logout.json'
-	}, function() {
-
-//        Ti.App.Properties.removeProperty("Drupal-Cookie");
-
-		success();
+	}, function(response) {
+	    // session over - delete the token
+        Ti.App.Properties.setString("X-CSRF-Token", null);
+		success(response);
 	}, failure, headers);
 
 }
@@ -414,6 +412,7 @@ function basicField(obj) {
 	};
 }
 
+exports.setRestPath = setRestPath;
 
 exports.systemConnect = systemConnect;
 exports.makeAuthenticatedRequest = makeAuthenticatedRequest;
