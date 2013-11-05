@@ -38,7 +38,10 @@ describe("Drupal Tests", function() {
             });
                 
             waitsFor(function(){ return done; }, 'timeout connecting', 2500);
-
+            
+            runs(function(){
+                expect(connected).toEqual(true);
+            });
         });
 
         logoutIfNecessary();

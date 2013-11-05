@@ -32,7 +32,6 @@ Button: {
 	color: '#fff',
 	backgroundColor: '#27b',
 	width: 200,
-	style: Ti.UI.iPhone.SystemButtonStyle.PLAIN,
 	top: 5,
 	bottom: 5
 }

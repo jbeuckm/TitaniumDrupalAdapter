@@ -30,9 +30,12 @@ function setRestPath(root, endpoint) {
  */
 function systemConnect(success, failure) {
 
-	var url = REST_PATH + 'system/connect.json';
-
 	var xhr = Ti.Network.createHTTPClient();
+
+    var url = REST_PATH + 'system/connect';
+
+    Ti.API.debug("POSTing to url "+url);
+    xhr.open("POST", url);
 
 	xhr.onload = function(e) {
 
@@ -61,14 +64,13 @@ function systemConnect(success, failure) {
         Ti.API.error("There was an error calling systemConnect: ");
         Ti.API.error(e);
 
-		// since systemConnect failed, we probably need a new csrf
-		Ti.App.Properties.setString("X-CSRF-Token", null);
+		// since systemConnect failed, will need a new csrf and session
+        Ti.App.Properties.setString("X-CSRF-Token", null);
+        Ti.App.Properties.setString("Drupal-Cookie", null);
 
 		failure(e);
 	};
 
-    Ti.API.debug("POSTing to url "+url);
-    xhr.open("POST", url);
 	xhr.send();
 }
 
