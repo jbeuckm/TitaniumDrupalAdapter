@@ -10,9 +10,15 @@
  * Github project link: https://github.com/jbeuckm/TitaniumDrupalAdapter
  */
 
-Ti.include("drupal/config.js");
-var REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
-
+try {
+	Ti.include("drupal/config.js");
+	var REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
+}
+catch (e) {
+	Ti.API.error("************************ DRUPAL CONFIG NOT FOUND *******************************");
+	Ti.API.error("Please edit 'lib/drupal/config.js.example' and rename to 'lib/drupal/config.js'.");
+	Ti.API.error("************************ DRUPAL CONFIG NOT FOUND *******************************");
+}
 
 /**
  * Prepare to connect to a (different) Drupal server and Services 3.4 module.
