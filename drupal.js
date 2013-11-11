@@ -10,9 +10,10 @@
  * Github project link: https://github.com/jbeuckm/TitaniumDrupalAdapter
  */
 
+var REST_PATH;
 try {
 	Ti.include("drupal/config.js");
-	var REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
+	REST_PATH = SITE_ROOT + SERVICES_ENDPOINT + '/';
 }
 catch (e) {
 	Ti.API.error("************************ DRUPAL CONFIG NOT FOUND *******************************");
