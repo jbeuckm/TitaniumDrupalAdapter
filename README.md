@@ -1,5 +1,7 @@
 <em style="color:red;">PLEASE NOTE: This module has been replaced by a more general Javascript Drupal client:<br>https://github.com/jbeuckm/drupal-client</em>
 
+[![deprecated](http://badges.github.io/stability-badges/dist/deprecated.svg)](http://github.com/badges/stability-badges)
+
 # Requirements
 
 1. An installation of Drupal 7.x
