@@ -1,4 +1,4 @@
-<em>PLEASE NOTE: This module has been replaced by a more general Drupal client: https://github.com/jbeuckm/drupal-client</em>
+<em color="red">PLEASE NOTE: This module has been replaced by a more general Javascript Drupal client:<br>https://github.com/jbeuckm/drupal-client</em>
 
 # Requirements
 
