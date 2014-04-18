@@ -1,3 +1,5 @@
+<em>PLEASE NOTE: This module has been replaced by a more general Drupal client: https://github.com/jbeuckm/drupal-client</em>
+
 # Requirements
 
 1. An installation of Drupal 7.x
